@@ -1,0 +1,745 @@
+'use client'
+
+import { useEffect, useState, useRef } from 'react'
+import WaveSurfer from 'wavesurfer.js'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import type { Database } from '@/lib/database.types'
+import { UploadIcon, SeparateIcon, CloseIcon, ArrowRightIcon, PlayIcon, PauseIcon } from '@/components/icons'
+import { ContactModal } from '@/components/ContactModal'
+
+type Job = Database['public']['Tables']['jobs']['Row']
+type Profile = Database['public']['Tables']['profiles']['Row']
+
+function formatTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.floor(seconds % 60)
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+export default function HomePage() {
+  const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [file, setFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'starting' | 'error'>('idle')
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false)
+  const [showContactModal, setShowContactModal] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [playingTrack, setPlayingTrack] = useState<string | null>(null)
+  const [playingVersion, setPlayingVersion] = useState<'original' | 'vocals' | 'instrumental'>('original')
+  const [progress, setProgress] = useState<{ time: number; duration: number }>({ time: 0, duration: 0 })
+  const waveformRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+  const wavesurferRefs = useRef<{ [key: string]: WaveSurfer | null }>({})
+
+  const router = useRouter()
+  const supabase = createClient()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Sample tracks for before/after demo
+  const sampleTracks = [
+    {
+      id: 'sample-1',
+      name: 'Kol Nidrei',
+      artist: 'Sample Artist',
+      original: '/samples/track1-original.mp3',
+      vocals: '/samples/track1-vocals.mp3',
+      instrumental: '/samples/track1-instrumental.mp3',
+    },
+    {
+      id: 'sample-2',
+      name: 'Shalom Aleichem',
+      artist: 'Sample Artist',
+      original: '/samples/track2-original.mp3',
+      vocals: '/samples/track2-vocals.mp3',
+      instrumental: '/samples/track2-instrumental.mp3',
+    },
+    {
+      id: 'sample-3',
+      name: 'Hatikvah',
+      artist: 'Sample Artist',
+      original: '/samples/track3-original.mp3',
+      vocals: '/samples/track3-vocals.mp3',
+      instrumental: '/samples/track3-instrumental.mp3',
+    },
+    {
+      id: 'sample-4',
+      name: 'Adon Olam',
+      artist: 'Sample Artist',
+      original: '/samples/track4-original.mp3',
+      vocals: '/samples/track4-vocals.mp3',
+      instrumental: '/samples/track4-instrumental.mp3',
+    },
+  ]
+
+  const handlePlaySample = (trackId: string, version: 'original' | 'vocals' | 'instrumental') => {
+    const track = sampleTracks.find((t) => t.id === trackId)
+    if (!track) return
+
+    const ws = wavesurferRefs.current[trackId]
+    if (!ws) return
+
+    // If clicking the same track/version, toggle pause
+    if (playingTrack === trackId && playingVersion === version) {
+      if (ws.isPlaying()) {
+        ws.pause()
+        setPlayingTrack(null)
+      } else {
+        ws.play()
+        setPlayingTrack(trackId)
+      }
+      return
+    }
+
+    // Save current time if switching versions of the same track
+    const currentTime = ws.getCurrentTime()
+    const isSameTrack = playingTrack === trackId
+
+    // Play new track/version
+    setPlayingTrack(trackId)
+    setPlayingVersion(version)
+    if (!isSameTrack) {
+      setProgress({ time: 0, duration: 0 })
+    }
+
+    // Load new version and maintain position if same track
+    ws.load(track[version])
+    ws.once('ready', () => {
+      if (isSameTrack && currentTime > 0) {
+        ws.seekTo(currentTime / ws.getDuration())
+      }
+      ws.play()
+    })
+  }
+
+  // Initialize WaveSurfer instances
+  useEffect(() => {
+    sampleTracks.forEach((track) => {
+      const container = waveformRefs.current[track.id]
+      if (container && !wavesurferRefs.current[track.id]) {
+        const ws = WaveSurfer.create({
+          container,
+          waveColor: '#ffffff20',
+          progressColor: '#4d7cff',
+          cursorColor: 'transparent',
+          barWidth: 2,
+          barGap: 2,
+          barRadius: 2,
+          height: 56,
+          normalize: true,
+          backend: 'WebAudio',
+        })
+
+        ws.load(track.original)
+
+        ws.on('timeupdate', (time) => {
+          setProgress({ time, duration: ws.getDuration() })
+        })
+
+        ws.on('finish', () => {
+          setPlayingTrack(null)
+          setProgress({ time: 0, duration: ws.getDuration() })
+        })
+
+        wavesurferRefs.current[track.id] = ws
+      }
+    })
+
+    // Cleanup
+    return () => {
+      Object.values(wavesurferRefs.current).forEach((ws) => {
+        if (ws) {
+          try {
+            ws.destroy()
+          } catch (e) {
+            // Ignore errors during cleanup
+          }
+        }
+      })
+      wavesurferRefs.current = {}
+    }
+  }, [])
+
+
+  useEffect(() => {
+    async function loadData() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      setUser(user)
+
+      if (user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+
+        setProfile(profileData)
+
+        const { data: jobsData } = await supabase
+          .from('jobs')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(5)
+
+        setJobs(jobsData || [])
+      }
+
+      setLoading(false)
+    }
+
+    loadData()
+  }, [])
+
+  const handleFileSelect = (selectedFile: File) => {
+    if (loading) return
+
+    if (selectedFile.size > 20 * 1024 * 1024) {
+      alert('File must be under 20MB')
+      return
+    }
+
+    const validTypes = [
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/wav',
+      'audio/x-wav',
+      'audio/flac',
+      'audio/x-flac',
+    ]
+    if (
+      !validTypes.includes(selectedFile.type) &&
+      !selectedFile.name.match(/\.(mp3|wav|flac)$/i)
+    ) {
+      alert('Please upload MP3, WAV, or FLAC files only')
+      return
+    }
+
+    setFile(selectedFile)
+    setUploadState('idle')
+    setUploadProgress(0)
+  }
+
+  const handleUploadClick = () => {
+    if (!file) return
+
+    if (!user) {
+      setShowAuthPrompt(true)
+      return
+    }
+
+    if (profile && profile.credits === 0) {
+      router.push('/credits')
+      return
+    }
+
+    uploadFile(file)
+  }
+
+  const uploadFile = async (fileToUpload: File) => {
+    setUploadState('uploading')
+    setUploadProgress(0)
+
+    const fail = () => {
+      setUploadState('error')
+      setTimeout(() => setUploadState('idle'), 3000)
+    }
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (!session) {
+      fail()
+      return
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!supabaseUrl || !anonKey) {
+      fail()
+      return
+    }
+
+    const jobId =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const ext = (fileToUpload.name.split('.').pop() || 'mp3').toLowerCase()
+    const storagePath = `${session.user.id}/${jobId}/original.${ext}`
+
+    // 1. Upload the file straight to Supabase Storage. We go directly to the
+    //    Storage REST endpoint (instead of through our own API) so the upload
+    //    isn't capped by Netlify's ~4.5MB serverless request limit, and we can
+    //    still report real upload progress to the user.
+    const uploaded = await new Promise<boolean>((resolve) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open(
+        'POST',
+        `${supabaseUrl}/storage/v1/object/tracks/${storagePath}`
+      )
+      xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`)
+      xhr.setRequestHeader('apikey', anonKey)
+      xhr.setRequestHeader('x-upsert', 'false')
+      xhr.setRequestHeader(
+        'Content-Type',
+        fileToUpload.type || 'application/octet-stream'
+      )
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100)
+          setUploadProgress(pct)
+          if (pct >= 100) setUploadState('starting')
+        }
+      }
+
+      xhr.onload = () => resolve(xhr.status >= 200 && xhr.status < 300)
+      xhr.onerror = () => resolve(false)
+      xhr.send(fileToUpload)
+    })
+
+    if (!uploaded) {
+      fail()
+      return
+    }
+
+    setUploadState('starting')
+
+    // 2. Ask the server to start LALAL.AI processing. This is a small JSON
+    //    request, so it stays well within serverless limits.
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          jobId,
+          storagePath,
+          filename: fileToUpload.name,
+        }),
+      })
+
+      if (!res.ok) {
+        console.error('Upload failed:', await res.text())
+        fail()
+        return
+      }
+
+      const data = await res.json()
+      router.push(`/processing/${data.jobId}`)
+    } catch (err) {
+      console.error('Upload failed:', err)
+      fail()
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const droppedFile = e.dataTransfer.files[0]
+    if (droppedFile) handleFileSelect(droppedFile)
+  }
+
+  const isBusy = uploadState === 'uploading' || uploadState === 'starting'
+
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-[#0e0e0e] text-white text-sm">
+      {/* Ambient glow */}
+      <div className="glow-blob" style={{ width: 460, height: 460, top: -160, left: '50%', marginLeft: -230 }} />
+
+      {/* Top Nav */}
+      <nav className="relative z-20 px-4 sm:px-6 py-4 sm:py-6">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <Link href="/" className="text-xl font-bold tracking-tight hover:text-[#4d7cff] transition-colors">
+            Havdolo
+          </Link>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            {loading ? null : user ? (
+              <>
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 h-[42px] rounded-lg hover:bg-white/5 transition-all"
+                >
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#4d7cff] to-[#6b93ff] flex items-center justify-center text-sm font-bold shadow-lg">
+                    {user.email?.[0].toUpperCase() || 'U'}
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-sm font-bold tabular-nums text-[#ff8c42]">{profile?.credits ?? 0}</span>
+                    <span className="text-sm font-medium text-white/60">credits</span>
+                  </div>
+                </Link>
+                <Link
+                  href="/credits"
+                  className="px-5 sm:px-6 h-[42px] flex items-center rounded-lg bg-[#4d7cff] text-white text-sm font-semibold hover:bg-[#3f6cf5] transition-all hover:scale-[1.02] whitespace-nowrap"
+                >
+                  <span className="hidden sm:inline">Get credits</span>
+                  <span className="sm:hidden">Credits</span>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/auth"
+                  className="text-sm text-white/60 hover:text-white transition-colors"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/credits"
+                  className="px-5 sm:px-6 h-[42px] flex items-center rounded-lg bg-[#4d7cff] text-white text-sm font-semibold hover:bg-[#3f6cf5] transition-all hover:scale-[1.02] whitespace-nowrap"
+                >
+                  <span className="hidden sm:inline">Get credits</span>
+                  <span className="sm:hidden">Credits</span>
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero — matches the nav content width */}
+      <header className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-12 sm:pt-24 pb-20 sm:pb-40 text-center">
+        <p className="animate-fade-in-up inline-flex items-center gap-2 text-sm uppercase tracking-[0.25em] text-[#6b93ff]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#4d7cff] animate-pulse-soft" />
+          The first of its kind
+        </p>
+
+        <h1 className="mt-6 text-5xl sm:text-6xl md:text-7xl font-bold leading-[1.03] tracking-tight">
+          <span className="block animate-fade-in-up delay-100">AI-powered vocal remover</span>
+          <span className="block animate-fade-in-up delay-200">
+            made for <span className="shimmer-text">Jewish music</span>.
+          </span>
+        </h1>
+
+        <p className="mt-4 sm:mt-7 animate-fade-in-up delay-300 text-sm text-white/55 max-w-xl mx-auto leading-relaxed px-4">
+          Trained on hundreds of Jewish songs, our AI understands the unique textures of Jewish music.
+        </p>
+      </header>
+
+      {/* Upload card — overlaps the hero */}
+      <main className="relative z-20 max-w-5xl mx-auto px-4 sm:px-6 -mt-12 sm:-mt-24">
+        {!file ? (
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className={`animate-soft-pulse group relative rounded-lg bg-[#141414] p-12 text-center cursor-pointer transition-all duration-300 ${
+              isDragging ? 'bg-[#1b1b1b] scale-[1.01]' : 'hover:bg-[#171717]'
+            }`}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".mp3,.wav,.flac,audio/mpeg,audio/wav,audio/flac"
+              onChange={(e) => {
+                const selectedFile = e.target.files?.[0]
+                if (selectedFile) handleFileSelect(selectedFile)
+              }}
+              className="hidden"
+            />
+
+            <div className="flex justify-center mb-5">
+              <div className="w-14 h-14 rounded-full bg-[#4d7cff]/15 text-[#6b93ff] flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+                <UploadIcon width={26} height={26} />
+              </div>
+            </div>
+
+            <p className="text-xl font-medium mb-2">
+              {isDragging ? 'Drop it here' : 'Drop your track to begin'}
+            </p>
+            <p className="text-sm text-white/40">
+              or <span className="text-[#6b93ff] underline underline-offset-4">browse files</span>
+              {' · '}MP3, WAV, FLAC · up to 20MB
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-lg bg-[#141414] p-8 animate-soft-pulse">
+            <div className="mb-6 text-left">
+              <p className="text-white text-xl font-medium truncate">{file.name}</p>
+              <p className="text-white/40 text-sm tabular-nums">
+                {(file.size / (1024 * 1024)).toFixed(2)} MB
+              </p>
+            </div>
+
+            {isBusy && (
+              <div className="mb-6 animate-fade-in">
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="text-white/70">
+                    {uploadState === 'starting' ? 'Starting separation…' : 'Uploading…'}
+                  </span>
+                  <span className="text-white/70 tabular-nums">
+                    {uploadState === 'starting' ? '' : `${uploadProgress}%`}
+                  </span>
+                </div>
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                  {uploadState === 'starting' ? (
+                    <div className="h-full w-full bg-[#4d7cff] animate-pulse-soft" />
+                  ) : (
+                    <div
+                      className="h-full bg-[#4d7cff] transition-all duration-200 ease-out"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleUploadClick}
+                disabled={isBusy}
+                className={`flex flex-1 items-center justify-center gap-2 px-8 py-3 bg-[#4d7cff] text-white rounded-lg font-medium transition-all ${
+                  isBusy ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[#3f6cf5] hover:scale-[1.02]'
+                }`}
+              >
+                {!isBusy && uploadState !== 'error' && <SeparateIcon width={18} height={18} />}
+                {uploadState === 'uploading'
+                  ? 'Uploading…'
+                  : uploadState === 'starting'
+                    ? 'Starting…'
+                    : uploadState === 'error'
+                      ? 'Failed, try again'
+                      : 'Separate vocals & music'}
+              </button>
+              <button
+                onClick={() => {
+                  setFile(null)
+                  setUploadProgress(0)
+                  setUploadState('idle')
+                }}
+                disabled={isBusy}
+                className={`flex items-center justify-center gap-2 px-6 py-3 border border-white/15 rounded-lg font-medium transition-colors ${
+                  isBusy ? 'opacity-50 cursor-not-allowed' : 'hover:border-white/40'
+                }`}
+              >
+                <CloseIcon width={16} height={16} />
+                Remove
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* How it works */}
+        <section className="mt-12 sm:mt-20">
+          <div className="grid sm:grid-cols-3 gap-8 sm:gap-12">
+            {[
+              { n: '01', t: 'Upload', d: 'Drop in any audio file — MP3, WAV, or FLAC.' },
+              { n: '02', t: 'Separate', d: 'Our AI isolates the vocals from the music.' },
+              { n: '03', t: 'Download', d: 'Grab the vocals, the music, or both.' },
+            ].map((step) => (
+              <div key={step.n} className="text-center">
+                <div className="text-sm font-mono text-[#6b93ff] mb-3 tracking-wider">{step.n}</div>
+                <h3 className="text-xl font-semibold mb-2">{step.t}</h3>
+                <p className="text-sm text-white/50 leading-relaxed">{step.d}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Section divider */}
+        <div className="section-divider mt-16 sm:mt-24" aria-hidden="true">
+          <span className="section-divider__dot" />
+        </div>
+
+        {/* Before & After Demo */}
+        <section className="relative mt-8 sm:mt-12">
+          {/* Ambient glow instead of a solid container */}
+          <div className="glow-blob" style={{ width: 380, height: 380, top: 40, left: '50%', marginLeft: -190 }} />
+
+          <div className="relative">
+            <div className="text-center mb-8 sm:mb-10">
+              <p className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.25em] text-[#6b93ff] mb-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4d7cff] animate-pulse-soft" />
+                Real results
+              </p>
+              <h2 className="text-xl font-bold mb-2">Hear the difference</h2>
+              <p className="text-sm text-white/55 max-w-2xl mx-auto leading-relaxed">
+                A sample of tracks that use this software.
+              </p>
+            </div>
+
+          <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
+            {sampleTracks.map((track, index) => {
+              const isPlaying = playingTrack === track.id
+              const activeVersion = isPlaying ? playingVersion : null
+
+              return (
+                <div
+                  key={track.id}
+                  className={`
+                    group relative rounded-2xl p-px transition-all
+                    ${
+                      isPlaying
+                        ? 'bg-gradient-to-br from-[#4d7cff] to-[#4d7cff]/20 shadow-xl shadow-[#4d7cff]/20'
+                        : 'bg-gradient-to-br from-white/15 to-white/[0.03] hover:from-white/25'
+                    }
+                  `}
+                >
+                  <div className="relative rounded-2xl bg-[#101010] p-5 sm:p-6 overflow-hidden">
+                    {/* Header: index + track info + live equalizer */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-sm text-[#6b93ff] tracking-wider">
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <div>
+                          <h3 className="font-semibold text-xl leading-tight">{track.name}</h3>
+                          <p className="text-sm text-white/40 mt-0.5">{track.artist}</p>
+                        </div>
+                      </div>
+
+                      {isPlaying && (
+                        <div className="flex items-end gap-1 h-5">
+                          {[0, 0.2, 0.4, 0.15].map((delay, i) => (
+                            <span
+                              key={i}
+                              className="eq-bar h-full"
+                              style={{ background: '#4d7cff', animationDelay: `${delay}s` }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Waveform — the hero */}
+                    <div
+                      ref={(el) => {
+                        waveformRefs.current[track.id] = el
+                      }}
+                      className="rounded-lg overflow-hidden mb-2.5"
+                    />
+
+                    {/* Playback progress bar */}
+                    {isPlaying && (
+                      <div className="mb-2.5 animate-fade-in">
+                        <div className="h-1 rounded-full bg-white/10 overflow-hidden">
+                          <div
+                            className="h-full bg-[#4d7cff] rounded-full transition-[width] duration-150 ease-linear"
+                            style={{
+                              width: `${
+                                progress.duration > 0
+                                  ? Math.min(100, (progress.time / progress.duration) * 100)
+                                  : 0
+                              }%`,
+                            }}
+                          />
+                        </div>
+                        <div className="mt-1 flex justify-between text-sm font-mono text-white/45 tabular-nums">
+                          <span>{formatTime(progress.time)}</span>
+                          <span>{formatTime(progress.duration)}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Version toggle buttons */}
+                    <div className="flex gap-2">
+                      {([
+                        { key: 'original', label: 'Original' },
+                        { key: 'vocals', label: 'Vocals' },
+                        { key: 'instrumental', label: 'Music' },
+                      ] as const).map(({ key, label }) => {
+                        const active = isPlaying && activeVersion === key
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => handlePlaySample(track.id, key)}
+                            className={`
+                              flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5
+                              ${
+                                active
+                                  ? 'bg-[#4d7cff] text-white hover:bg-[#3f6cf5]'
+                                  : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
+                              }
+                            `}
+                          >
+                            {active ? (
+                              <PauseIcon width={12} height={12} />
+                            ) : (
+                              <PlayIcon width={12} height={12} />
+                            )}
+                            {label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          </div>
+        </section>
+
+
+        <footer className="mt-20 pb-16 text-center">
+          <button
+            onClick={() => setShowContactModal(true)}
+            className="text-white/60 hover:text-[#4d7cff] transition-colors text-sm font-medium"
+          >
+            Contact us
+          </button>
+        </footer>
+      </main>
+
+      {/* Auth Prompt Modal */}
+      {showAuthPrompt && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 px-6 animate-fade-in">
+          <div className="bg-[#161616] border border-white/10 rounded-lg p-8 max-w-md w-full animate-fade-in-up">
+            <h2 className="text-xl font-bold mb-3">Create a free account to continue</h2>
+            <p className="text-white/60 mb-6">
+              Your file is ready and waiting — sign up or sign in and we&apos;ll pick up right
+              where you left off.
+            </p>
+
+            <div className="flex gap-3">
+              <Link
+                href="/auth"
+                className="flex-1 px-6 py-3 bg-[#4d7cff] text-white rounded-lg font-medium text-center hover:bg-[#3f6cf5] transition-colors"
+              >
+                Sign up
+              </Link>
+              <Link
+                href="/auth"
+                className="flex-1 px-6 py-3 border border-white/20 rounded-lg font-medium text-center hover:border-white/50 transition-colors"
+              >
+                Sign in
+              </Link>
+            </div>
+
+            <button
+              onClick={() => setShowAuthPrompt(false)}
+              className="w-full mt-4 text-sm text-white/40 hover:text-white/60 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Contact Modal */}
+      <ContactModal isOpen={showContactModal} onClose={() => setShowContactModal(false)} />
+    </div>
+  )
+}
