@@ -84,7 +84,7 @@ create or replace function public.handle_new_user()
 returns trigger as $$
 begin
   insert into public.profiles (id, credits)
-  values (new.id, 3);
+  values (new.id, 0);
   return new;
 end;
 $$ language plpgsql security definer;
@@ -257,7 +257,7 @@ predictable for all users.
 
 ## Credits System
 
-- Users start with 3 free credits
+- Users start with 0 free credits
 - Each separation job costs 1 credit
 - Credit packs:
   - Starter: 10 credits - £9.99
