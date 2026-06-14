@@ -92,6 +92,14 @@ export async function GET(
     let progress = 0
 
     const taskStatus = task?.status
+    
+    // If task is successful, start fresh to parse the new response
+    // (don't use potentially stale URLs from database)
+    if (taskStatus === 'success') {
+      vocalUrl = null
+      instrumentalUrl = null
+      console.log('Task successful - parsing fresh track URLs from LALAL.AI response')
+    }
 
     if (taskStatus === 'error' || taskStatus === 'server_error') {
       console.error('LALAL.AI task error:', task?.error || task)
@@ -117,38 +125,82 @@ export async function GET(
       progress = 100
       const tracks = task?.result?.tracks || []
 
+      // Log the full response for debugging
+      console.log('LALAL.AI task result:', JSON.stringify(task?.result, null, 2))
+      console.log('Tracks array:', JSON.stringify(tracks, null, 2))
+
       // The vocals separation returns both the isolated vocal ("stem") and the
-      // remaining instrumental ("back"). Match defensively by type or label.
+      // remaining instrumental ("back"). Match by label first, then type.
       for (const t of tracks) {
-        const kind = String(t.type || t.label || '').toLowerCase()
-        if (!vocalUrl && (kind.includes('stem') || kind.includes('vocal'))) {
-          vocalUrl = t.url
+        const label = String(t.label || '').toLowerCase()
+        const type = String(t.type || '').toLowerCase()
+        console.log(`Processing track: label="${label}", type="${type}", url="${t.url}"`)
+        
+        // Match vocal/stem track - prioritize exact matches
+        if (!vocalUrl) {
+          if (label === 'stem' || label === 'vocals' || label === 'vocal' ||
+              type === 'stem' || type === 'vocals' || type === 'vocal' ||
+              label.includes('vocal') || type.includes('vocal')) {
+            vocalUrl = t.url
+            console.log('✓ Assigned vocal URL:', vocalUrl)
+            continue
+          }
         }
-        if (
-          !instrumentalUrl &&
-          (kind.includes('back') ||
-            kind.includes('instrument') ||
-            kind.includes('no_vocal') ||
-            kind.includes('music'))
-        ) {
-          instrumentalUrl = t.url
+        
+        // Match instrumental/back track - prioritize exact matches
+        if (!instrumentalUrl) {
+          if (label === 'back' || label === 'instrumental' || label === 'no_vocals' || label === 'music' ||
+              type === 'back' || type === 'instrumental' || type === 'no_vocals' || type === 'music' ||
+              label.includes('back') || label.includes('instrument') || label.includes('music') ||
+              type.includes('back') || type.includes('instrument') || type.includes('music')) {
+            instrumentalUrl = t.url
+            console.log('✓ Assigned instrumental URL:', instrumentalUrl)
+            continue
+          }
         }
       }
 
       // Fallbacks for alternative response shapes
       if (!vocalUrl && task?.result?.stem_track) {
         vocalUrl = task.result.stem_track
+        console.log('Using stem_track fallback for vocals:', vocalUrl)
       }
       if (!instrumentalUrl && task?.result?.back_track) {
         instrumentalUrl = task.result.back_track
+        console.log('Using back_track fallback for instrumental:', instrumentalUrl)
       }
 
-      // If still unmatched but exactly two tracks, assign by order
+      // If still unmatched but exactly two tracks, we need to distinguish them
+      // by checking which URL is which (they should be different)
       if ((!vocalUrl || !instrumentalUrl) && tracks.length === 2) {
-        vocalUrl = vocalUrl || tracks[0].url
-        instrumentalUrl = instrumentalUrl || tracks[1].url
+        // Ensure the tracks are actually different
+        if (tracks[0].url !== tracks[1].url) {
+          // Try to infer from filename or just assign by convention
+          // (LALAL.AI typically returns stem first, back second)
+          if (!vocalUrl) {
+            vocalUrl = tracks[0].url
+            console.log('Assigned vocals by position [0]:', vocalUrl)
+          }
+          if (!instrumentalUrl) {
+            instrumentalUrl = tracks[1].url
+            console.log('Assigned instrumental by position [1]:', instrumentalUrl)
+          }
+        } else {
+          console.error('⚠️  WARNING: Both tracks have the same URL! This is unexpected.')
+          console.error('Track URLs:', tracks.map(t => t.url))
+          // Assign the same URL to both to avoid null, but log the error
+          vocalUrl = vocalUrl || tracks[0].url
+          instrumentalUrl = instrumentalUrl || tracks[0].url
+        }
       }
 
+      // Final validation
+      if (vocalUrl === instrumentalUrl && vocalUrl) {
+        console.error('⚠️  CRITICAL: Vocal and instrumental URLs are identical!')
+        console.error('This means LALAL.AI returned the same file for both tracks.')
+      }
+
+      console.log('Final URLs - Vocals:', vocalUrl, 'Instrumental:', instrumentalUrl)
       internalStatus = vocalUrl && instrumentalUrl ? 'done' : 'exporting'
     }
 
