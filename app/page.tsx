@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import WaveSurfer from 'wavesurfer.js'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -33,8 +32,7 @@ export default function HomePage() {
   const [playingTrack, setPlayingTrack] = useState<string | null>(null)
   const [playingVersion, setPlayingVersion] = useState<'original' | 'vocals' | 'instrumental'>('original')
   const [progress, setProgress] = useState<{ time: number; duration: number }>({ time: 0, duration: 0 })
-  const waveformRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
-  const wavesurferRefs = useRef<{ [key: string]: WaveSurfer | null }>({})
+  const audioRefs = useRef<{ [key: string]: { original: HTMLAudioElement | null; vocals: HTMLAudioElement | null; instrumental: HTMLAudioElement | null } }>({})
 
   const router = useRouter()
   const supabase = createClient()
@@ -44,8 +42,8 @@ export default function HomePage() {
   const sampleTracks = [
     {
       id: 'sample-1',
-      name: 'Kol Nidrei',
-      artist: 'Sample Artist',
+      name: 'RokedLi',
+      artist: 'Itzik Dadya',
       albumArt: '/samples/album1.jpg',
       original: '/samples/track1-original.mp3',
       vocals: '/samples/track1-vocals.mp3',
@@ -53,30 +51,12 @@ export default function HomePage() {
     },
     {
       id: 'sample-2',
-      name: 'Shalom Aleichem',
-      artist: 'Sample Artist',
+      name: 'Abba',
+      artist: 'Mordechai Shapiro',
       albumArt: '/samples/album2.jpg',
       original: '/samples/track2-original.mp3',
       vocals: '/samples/track2-vocals.mp3',
       instrumental: '/samples/track2-instrumental.mp3',
-    },
-    {
-      id: 'sample-3',
-      name: 'Hatikvah',
-      artist: 'Sample Artist',
-      albumArt: '/samples/album3.jpg',
-      original: '/samples/track3-original.mp3',
-      vocals: '/samples/track3-vocals.mp3',
-      instrumental: '/samples/track3-instrumental.mp3',
-    },
-    {
-      id: 'sample-4',
-      name: 'Adon Olam',
-      artist: 'Sample Artist',
-      albumArt: '/samples/album4.jpg',
-      original: '/samples/track4-original.mp3',
-      vocals: '/samples/track4-vocals.mp3',
-      instrumental: '/samples/track4-instrumental.mp3',
     },
   ]
 
@@ -84,87 +64,119 @@ export default function HomePage() {
     const track = sampleTracks.find((t) => t.id === trackId)
     if (!track) return
 
-    const ws = wavesurferRefs.current[trackId]
-    if (!ws) return
+    const instances = audioRefs.current[trackId]
+    if (!instances) return
+
+    const newAudio = instances[version]
+    if (!newAudio) return
 
     // If clicking the same track/version, toggle pause
     if (playingTrack === trackId && playingVersion === version) {
-      if (ws.isPlaying()) {
-        ws.pause()
+      if (!newAudio.paused) {
+        newAudio.pause()
         setPlayingTrack(null)
       } else {
-        ws.play()
+        newAudio.play()
         setPlayingTrack(trackId)
       }
       return
     }
 
-    // Save current time if switching versions of the same track
-    const currentTime = ws.getCurrentTime()
     const isSameTrack = playingTrack === trackId
+    let currentTime = 0
 
-    // Play new track/version
-    setPlayingTrack(trackId)
-    setPlayingVersion(version)
-    if (!isSameTrack) {
-      setProgress({ time: 0, duration: 0 })
+    // If switching versions of the same track, get current time and pause old version
+    if (isSameTrack) {
+      const oldAudio = instances[playingVersion]
+      if (oldAudio) {
+        currentTime = oldAudio.currentTime
+        oldAudio.pause()
+      }
+    } else {
+      // If switching tracks, pause all versions of the old track
+      if (playingTrack && audioRefs.current[playingTrack]) {
+        Object.values(audioRefs.current[playingTrack]).forEach(audio => {
+          if (audio) audio.pause()
+        })
+      }
     }
 
-    // Load new version and maintain position if same track
-    ws.load(track[version])
-    ws.once('ready', () => {
-      if (isSameTrack && currentTime > 0) {
-        ws.seekTo(currentTime / ws.getDuration())
-      }
-      ws.play()
-    })
+    // Play new version at the same position
+    setPlayingTrack(trackId)
+    setPlayingVersion(version)
+    
+    if (isSameTrack && currentTime > 0) {
+      newAudio.currentTime = currentTime
+    }
+    
+    newAudio.play()
   }
 
-  // Initialize WaveSurfer instances
+  const handleSeek = (trackId: string, e: React.MouseEvent<HTMLDivElement>) => {
+    const instances = audioRefs.current[trackId]
+    if (!instances || !playingTrack) return
+
+    const audio = instances[playingVersion]
+    if (!audio || !audio.duration) return
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const percentage = x / rect.width
+    audio.currentTime = percentage * audio.duration
+  }
+
+  // Initialize audio elements (3 per track for seamless switching)
   useEffect(() => {
     sampleTracks.forEach((track) => {
-      const container = waveformRefs.current[track.id]
-      if (container && !wavesurferRefs.current[track.id]) {
-        const ws = WaveSurfer.create({
-          container,
-          waveColor: '#ffffff20',
-          progressColor: '#4d7cff',
-          cursorColor: 'transparent',
-          barWidth: 2,
-          barGap: 2,
-          barRadius: 2,
-          height: 56,
-          normalize: true,
-          backend: 'WebAudio',
-        })
+      if (!audioRefs.current[track.id]) {
+        // Create three audio elements, one for each version
+        const originalAudio = new Audio(track.original)
+        const vocalsAudio = new Audio(track.vocals)
+        const instrumentalAudio = new Audio(track.instrumental)
 
-        ws.load(track.original)
+        // Preload all versions
+        originalAudio.preload = 'auto'
+        vocalsAudio.preload = 'auto'
+        instrumentalAudio.preload = 'auto'
 
-        ws.on('timeupdate', (time) => {
-          setProgress({ time, duration: ws.getDuration() })
-        })
+        // Set up event listeners for all three
+        const handleTimeUpdate = (audio: HTMLAudioElement) => () => {
+          setProgress({ time: audio.currentTime, duration: audio.duration })
+        }
 
-        ws.on('finish', () => {
+        const handleEnded = () => {
           setPlayingTrack(null)
-          setProgress({ time: 0, duration: ws.getDuration() })
-        })
+        }
 
-        wavesurferRefs.current[track.id] = ws
+        originalAudio.addEventListener('timeupdate', handleTimeUpdate(originalAudio))
+        vocalsAudio.addEventListener('timeupdate', handleTimeUpdate(vocalsAudio))
+        instrumentalAudio.addEventListener('timeupdate', handleTimeUpdate(instrumentalAudio))
+
+        originalAudio.addEventListener('ended', handleEnded)
+        vocalsAudio.addEventListener('ended', handleEnded)
+        instrumentalAudio.addEventListener('ended', handleEnded)
+
+        audioRefs.current[track.id] = {
+          original: originalAudio,
+          vocals: vocalsAudio,
+          instrumental: instrumentalAudio,
+        }
       }
     })
 
     // Cleanup
     return () => {
-      Object.values(wavesurferRefs.current).forEach((ws) => {
-        if (ws) {
-          try {
-            ws.destroy()
-          } catch (e) {
-            // Ignore errors during cleanup
-          }
+      Object.values(audioRefs.current).forEach((instances) => {
+        if (instances) {
+          Object.values(instances).forEach((audio) => {
+            if (audio) {
+              audio.pause()
+              audio.src = ''
+            }
+          })
         }
       })
-      wavesurferRefs.current = {}
+      audioRefs.current = {}
     }
   }, [])
 
@@ -602,69 +614,43 @@ export default function HomePage() {
                   `}
                 >
                   <div className="relative rounded-2xl bg-[#101010] p-5 sm:p-6 overflow-hidden">
-                    {/* Header: album art + track info + live equalizer */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-white/5 shadow-lg">
-                          <img
-                            src={track.albumArt}
-                            alt={`${track.name} album art`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-sm text-[#6b93ff] tracking-wider">
-                            {String(index + 1).padStart(2, '0')}
-                          </span>
-                          <div>
-                            <h3 className="font-semibold text-xl leading-tight">{track.name}</h3>
-                            <p className="text-sm text-white/40 mt-0.5">{track.artist}</p>
-                          </div>
-                        </div>
+                    {/* Header: album art + track info */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-white/5 shadow-lg">
+                        <img
+                          src={track.albumArt}
+                          alt={`${track.name} album art`}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-
-                      {isPlaying && (
-                        <div className="flex items-end gap-1 h-5">
-                          {[0, 0.2, 0.4, 0.15].map((delay, i) => (
-                            <span
-                              key={i}
-                              className="eq-bar h-full"
-                              style={{ background: '#4d7cff', animationDelay: `${delay}s` }}
-                            />
-                          ))}
-                        </div>
-                      )}
+                      <div>
+                        <h3 className="font-semibold text-xl leading-tight">{track.name}</h3>
+                        <p className="text-sm text-white/40 mt-0.5">{track.artist}</p>
+                      </div>
                     </div>
 
-                    {/* Waveform — the hero */}
-                    <div
-                      ref={(el) => {
-                        waveformRefs.current[track.id] = el
-                      }}
-                      className="rounded-lg overflow-hidden mb-2.5"
-                    />
-
-                    {/* Playback progress bar */}
-                    {isPlaying && (
-                      <div className="mb-2.5 animate-fade-in">
-                        <div className="h-1 rounded-full bg-white/10 overflow-hidden">
-                          <div
-                            className="h-full bg-[#4d7cff] rounded-full transition-[width] duration-150 ease-linear"
-                            style={{
-                              width: `${
-                                progress.duration > 0
-                                  ? Math.min(100, (progress.time / progress.duration) * 100)
-                                  : 0
-                              }%`,
-                            }}
-                          />
-                        </div>
-                        <div className="mt-1 flex justify-between text-sm font-mono text-white/45 tabular-nums">
-                          <span>{formatTime(progress.time)}</span>
-                          <span>{formatTime(progress.duration)}</span>
-                        </div>
+                    {/* Clickable progress bar */}
+                    <div className="mb-4">
+                      <div 
+                        className="h-2 rounded-full bg-white/10 overflow-hidden cursor-pointer hover:bg-white/15 transition-colors"
+                        onClick={(e) => handleSeek(track.id, e)}
+                      >
+                        <div
+                          className="h-full bg-[#4d7cff] rounded-full transition-[width] duration-150 ease-linear"
+                          style={{
+                            width: `${
+                              isPlaying && progress.duration > 0
+                                ? Math.min(100, (progress.time / progress.duration) * 100)
+                                : 0
+                            }%`,
+                          }}
+                        />
                       </div>
-                    )}
+                      <div className="mt-1.5 flex justify-between text-xs font-mono text-white/45 tabular-nums">
+                        <span>{isPlaying ? formatTime(progress.time) : '0:00'}</span>
+                        <span>{isPlaying && progress.duration > 0 ? formatTime(progress.duration) : '0:00'}</span>
+                      </div>
+                    </div>
 
                     {/* Version toggle buttons */}
                     <div className="flex gap-2">
