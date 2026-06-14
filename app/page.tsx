@@ -46,6 +46,7 @@ export default function HomePage() {
       id: 'sample-1',
       name: 'Kol Nidrei',
       artist: 'Sample Artist',
+      albumArt: '/samples/album1.jpg',
       original: '/samples/track1-original.mp3',
       vocals: '/samples/track1-vocals.mp3',
       instrumental: '/samples/track1-instrumental.mp3',
@@ -54,6 +55,7 @@ export default function HomePage() {
       id: 'sample-2',
       name: 'Shalom Aleichem',
       artist: 'Sample Artist',
+      albumArt: '/samples/album2.jpg',
       original: '/samples/track2-original.mp3',
       vocals: '/samples/track2-vocals.mp3',
       instrumental: '/samples/track2-instrumental.mp3',
@@ -62,6 +64,7 @@ export default function HomePage() {
       id: 'sample-3',
       name: 'Hatikvah',
       artist: 'Sample Artist',
+      albumArt: '/samples/album3.jpg',
       original: '/samples/track3-original.mp3',
       vocals: '/samples/track3-vocals.mp3',
       instrumental: '/samples/track3-instrumental.mp3',
@@ -70,6 +73,7 @@ export default function HomePage() {
       id: 'sample-4',
       name: 'Adon Olam',
       artist: 'Sample Artist',
+      albumArt: '/samples/album4.jpg',
       original: '/samples/track4-original.mp3',
       vocals: '/samples/track4-vocals.mp3',
       instrumental: '/samples/track4-instrumental.mp3',
@@ -598,15 +602,24 @@ export default function HomePage() {
                   `}
                 >
                   <div className="relative rounded-2xl bg-[#101010] p-5 sm:p-6 overflow-hidden">
-                    {/* Header: index + track info + live equalizer */}
-                    <div className="flex items-start justify-between mb-3">
+                    {/* Header: album art + track info + live equalizer */}
+                    <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <span className="font-mono text-sm text-[#6b93ff] tracking-wider">
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                        <div>
-                          <h3 className="font-semibold text-xl leading-tight">{track.name}</h3>
-                          <p className="text-sm text-white/40 mt-0.5">{track.artist}</p>
+                        <div className="relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-white/5 shadow-lg">
+                          <img
+                            src={track.albumArt}
+                            alt={`${track.name} album art`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono text-sm text-[#6b93ff] tracking-wider">
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                          <div>
+                            <h3 className="font-semibold text-xl leading-tight">{track.name}</h3>
+                            <p className="text-sm text-white/40 mt-0.5">{track.artist}</p>
+                          </div>
                         </div>
                       </div>
 

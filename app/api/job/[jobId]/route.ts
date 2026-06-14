@@ -1,6 +1,12 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
+type Track = {
+  url: string | null
+  label?: string
+  type?: string
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> }
@@ -123,7 +129,7 @@ export async function GET(
       internalStatus = progress < 50 ? 'analysing' : 'separating'
     } else if (taskStatus === 'success') {
       progress = 100
-      const tracks = task?.result?.tracks || []
+      const tracks: Track[] = task?.result?.tracks || []
 
       // Log the full response for debugging
       console.log('LALAL.AI task result:', JSON.stringify(task?.result, null, 2))
@@ -187,7 +193,7 @@ export async function GET(
           }
         } else {
           console.error('⚠️  WARNING: Both tracks have the same URL! This is unexpected.')
-          console.error('Track URLs:', tracks.map(t => t.url))
+          console.error('Track URLs:', tracks.map((t: Track) => t.url))
           // Assign the same URL to both to avoid null, but log the error
           vocalUrl = vocalUrl || tracks[0].url
           instrumentalUrl = instrumentalUrl || tracks[0].url
