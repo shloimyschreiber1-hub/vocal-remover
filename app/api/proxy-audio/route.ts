@@ -42,33 +42,39 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Stream the audio data directly (more efficient for large files)
-    const audioData = await response.arrayBuffer()
-
-    // Build response headers
+    // Build response headers.
+    //
+    // IMPORTANT: use `private` (not `public`) for caching. Each stem (vocals /
+    // no_vocals) is proxied via a distinct `?url=` value, but a *shared* CDN
+    // cache (e.g. Netlify's) can collapse these — especially with Range
+    // requests — and serve the first-fetched stem (vocals) for both players.
+    // `private` keeps fast per-URL caching in the user's browser while
+    // preventing any shared cache from storing and cross-serving the audio.
     const responseHeaders: HeadersInit = {
       'Content-Type': response.headers.get('Content-Type') || 'audio/mpeg',
-      'Cache-Control': 'public, max-age=31536000, immutable',
+      'Cache-Control': 'private, max-age=31536000, immutable',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Range',
       'Accept-Ranges': 'bytes',
+      Vary: 'Range',
     }
 
     // Forward Content-Length and Content-Range if present (for range requests)
     const contentLength = response.headers.get('Content-Length')
     const contentRange = response.headers.get('Content-Range')
-    
+
     if (contentLength) {
       responseHeaders['Content-Length'] = contentLength
     }
-    
+
     if (contentRange) {
       responseHeaders['Content-Range'] = contentRange
     }
 
-    // Return the audio with proper status (206 for partial content, 200 for full)
-    return new NextResponse(audioData, {
+    // Stream the body straight through instead of buffering the whole file into
+    // memory — avoids serverless response-size limits and is faster to first byte.
+    return new NextResponse(response.body, {
       status: rangeHeader && contentRange ? 206 : 200,
       headers: responseHeaders,
     })
