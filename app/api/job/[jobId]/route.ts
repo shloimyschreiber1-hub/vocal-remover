@@ -37,12 +37,22 @@ export async function GET(
       return NextResponse.json({ error: 'Job not found' }, { status: 404 })
     }
 
+    // Helper to proxy audio URLs through our server to bypass CORS restrictions
+    const proxyUrl = (url: string | null) => {
+      if (!url) return null
+      // Get the base URL from the request
+      const protocol = request.headers.get('x-forwarded-proto') || 'http'
+      const host = request.headers.get('host') || 'localhost:3000'
+      const baseUrl = `${protocol}://${host}`
+      return `${baseUrl}/api/proxy-audio?url=${encodeURIComponent(url)}`
+    }
+
     // Already finished — return stored values
     if (job.status === 'done' || job.status === 'failed') {
       return NextResponse.json({
         status: job.status,
-        vocal_url: job.vocal_url,
-        instrumental_url: job.instrumental_url,
+        vocal_url: proxyUrl(job.vocal_url),
+        instrumental_url: proxyUrl(job.instrumental_url),
       })
     }
 
@@ -50,8 +60,8 @@ export async function GET(
     if (!taskId) {
       return NextResponse.json({
         status: job.status,
-        vocal_url: job.vocal_url,
-        instrumental_url: job.instrumental_url,
+        vocal_url: proxyUrl(job.vocal_url),
+        instrumental_url: proxyUrl(job.instrumental_url),
       })
     }
 
@@ -68,8 +78,8 @@ export async function GET(
       console.error('LALAL.AI check failed:', await checkResponse.text())
       return NextResponse.json({
         status: job.status,
-        vocal_url: job.vocal_url,
-        instrumental_url: job.instrumental_url,
+        vocal_url: proxyUrl(job.vocal_url),
+        instrumental_url: proxyUrl(job.instrumental_url),
       })
     }
 
@@ -157,8 +167,8 @@ export async function GET(
 
     return NextResponse.json({
       status: internalStatus,
-      vocal_url: vocalUrl,
-      instrumental_url: instrumentalUrl,
+      vocal_url: proxyUrl(vocalUrl),
+      instrumental_url: proxyUrl(instrumentalUrl),
       progress,
     })
   } catch (error) {

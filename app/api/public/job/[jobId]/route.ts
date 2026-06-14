@@ -23,11 +23,21 @@ export async function GET(
       return NextResponse.json({ error: 'Job not found' }, { status: 404 })
     }
 
+    // Proxy the audio URLs through our server to bypass CORS restrictions
+    const proxyUrl = (url: string | null) => {
+      if (!url) return null
+      // Get the base URL from the request
+      const protocol = _request.headers.get('x-forwarded-proto') || 'http'
+      const host = _request.headers.get('host') || 'localhost:3000'
+      const baseUrl = `${protocol}://${host}`
+      return `${baseUrl}/api/proxy-audio?url=${encodeURIComponent(url)}`
+    }
+
     return NextResponse.json({
       status: job.status,
       original_filename: job.original_filename,
-      vocal_url: job.vocal_url,
-      instrumental_url: job.instrumental_url,
+      vocal_url: proxyUrl(job.vocal_url),
+      instrumental_url: proxyUrl(job.instrumental_url),
     })
   } catch (error) {
     console.error('Public job fetch error:', error)
