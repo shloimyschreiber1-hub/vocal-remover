@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0e0e0e',
+  themeColor: '#080808',
   width: 'device-width',
   initialScale: 1,
   // Lets the background extend under the notch/home indicator so our

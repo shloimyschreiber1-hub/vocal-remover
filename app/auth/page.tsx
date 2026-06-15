@@ -57,7 +57,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0e0e0e] text-white flex items-center justify-center px-6">
+    <div className="min-h-screen bg-[#080808] text-white flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="hover:opacity-80 transition-opacity inline-block">
@@ -65,7 +65,7 @@ export default function AuthPage() {
           </Link>
         </div>
 
-        <div className="border border-white/10 rounded-lg p-8 bg-[#1a1a1a]">
+        <div className="border border-white/10 rounded-lg p-8 bg-[#141414]">
           <h1 className="text-2xl font-bold mb-6 text-center">
             {isSignUp ? 'Create account' : 'Sign in'}
           </h1>
@@ -81,7 +81,7 @@ export default function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-[#0e0e0e] border border-white/20 rounded-md focus:outline-none focus:border-[#4d7cff] transition-colors"
+                className="w-full px-4 py-3 bg-[#080808] border border-white/20 rounded-md focus:outline-none focus:border-[#4d7cff] transition-colors"
               />
             </div>
 
@@ -96,7 +96,7 @@ export default function AuthPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-4 py-3 bg-[#0e0e0e] border border-white/20 rounded-md focus:outline-none focus:border-[#4d7cff] transition-colors"
+                className="w-full px-4 py-3 bg-[#080808] border border-white/20 rounded-md focus:outline-none focus:border-[#4d7cff] transition-colors"
               />
             </div>
 

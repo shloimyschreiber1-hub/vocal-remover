@@ -212,7 +212,7 @@ export default function ResultsPage() {
 
   if (notFound) {
     return (
-      <div className="min-h-screen bg-[#0e0e0e] flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center px-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white mb-3">Separation not found</h1>
           <p className="text-white/60 mb-6">
@@ -246,7 +246,7 @@ export default function ResultsPage() {
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-[#0e0e0e] flex items-center justify-center">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
         <div className="text-white/60">Loading...</div>
       </div>
     )
@@ -256,7 +256,7 @@ export default function ResultsPage() {
   const instrumentalFilename = job.original_filename.replace(/\.[^/.]+$/, '_music.mp3')
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0e0e0e] text-white">
+    <div className="relative min-h-screen overflow-hidden bg-[#080808] text-white">
       {/* Ambient glow */}
       <div
         className="glow-blob"
@@ -324,7 +324,7 @@ export default function ResultsPage() {
 
         {/* Stem player */}
         <div className="rounded-2xl p-px bg-gradient-to-br from-white/15 to-white/[0.03] mb-5 sm:mb-6">
-          <div className="rounded-2xl bg-[#101010] divide-y divide-white/[0.06] overflow-hidden">
+          <div className="rounded-2xl bg-[#0a0a0a] divide-y divide-white/[0.06] overflow-hidden">
             {/* Vocals */}
             <div className={`p-5 sm:p-6 transition-colors ${vocalsPlaying ? 'bg-[#4d7cff]/[0.06]' : ''}`}>
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
@@ -457,7 +457,7 @@ export default function ResultsPage() {
 
         {/* Quick Actions */}
         <div className="rounded-2xl p-px bg-gradient-to-br from-white/10 to-white/[0.02]">
-          <div className="grid sm:grid-cols-3 rounded-2xl bg-[#101010] divide-y sm:divide-y-0 sm:divide-x divide-white/[0.06]">
+          <div className="grid sm:grid-cols-3 rounded-2xl bg-[#0a0a0a] divide-y sm:divide-y-0 sm:divide-x divide-white/[0.06]">
             <Link
               href="/profile"
               className="group flex items-center gap-3.5 p-5 hover:bg-white/[0.03] transition-colors"

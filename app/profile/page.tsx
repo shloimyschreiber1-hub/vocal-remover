@@ -92,7 +92,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0e0e0e] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#080808] text-white flex items-center justify-center">
         <div className="flex items-center gap-3 text-white/40 animate-fade-in">
           <span className="w-2 h-2 rounded-full bg-[#4d7cff] animate-pulse-soft" />
           Loading your studio…
@@ -108,7 +108,7 @@ export default function ProfilePage() {
   ]
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0e0e0e] text-white">
+    <div className="relative min-h-screen overflow-hidden bg-[#080808] text-white">
       {/* Ambient glow */}
       <div
         className="glow-blob"
@@ -156,7 +156,7 @@ export default function ProfilePage() {
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-[#4d7cff] to-[#6b93ff] flex items-center justify-center text-3xl sm:text-4xl font-bold ring-4 ring-[#4d7cff]/15 shadow-xl shadow-[#4d7cff]/20">
               {user?.email?.[0].toUpperCase() || 'U'}
             </div>
-            <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-[#4d7cff] ring-4 ring-[#0e0e0e]" />
+            <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-[#4d7cff] ring-4 ring-[#080808]" />
           </div>
           <div className="flex-1 text-center sm:text-left min-w-0">
             <p className="text-sm uppercase tracking-[0.25em] text-[#6b93ff] mb-1.5">
@@ -186,7 +186,7 @@ export default function ProfilePage() {
             href="/credits"
             className="animate-fade-in-up delay-100 group relative rounded-2xl p-px bg-gradient-to-br from-[#ff8c42]/40 to-white/[0.04] hover:from-[#ff8c42]/70 transition-all"
           >
-            <div className="relative h-full rounded-2xl bg-[#121212] p-6 overflow-hidden">
+            <div className="relative h-full rounded-2xl bg-[#0c0c0c] p-6 overflow-hidden">
               <div className="flex items-center justify-between mb-5">
                 <span className="text-sm text-white/45">Credits balance</span>
                 <span className="w-9 h-9 rounded-lg bg-[#ff8c42]/10 text-[#ff8c42] flex items-center justify-center">
@@ -212,7 +212,7 @@ export default function ProfilePage() {
             href="/"
             className="animate-fade-in-up delay-200 group relative rounded-2xl p-px bg-gradient-to-br from-[#4d7cff]/40 to-white/[0.04] hover:from-[#4d7cff]/70 transition-all"
           >
-            <div className="relative h-full rounded-2xl bg-[#121212] p-6 overflow-hidden">
+            <div className="relative h-full rounded-2xl bg-[#0c0c0c] p-6 overflow-hidden">
               <div className="flex items-center justify-between mb-5">
                 <span className="text-sm text-white/45">Total tracks</span>
                 <span className="w-9 h-9 rounded-lg bg-[#4d7cff]/10 text-[#6b93ff] flex items-center justify-center">
@@ -233,7 +233,7 @@ export default function ProfilePage() {
 
           {/* Completed */}
           <div className="animate-fade-in-up delay-300 relative rounded-2xl p-px bg-gradient-to-br from-white/15 to-white/[0.04]">
-            <div className="relative h-full rounded-2xl bg-[#121212] p-6 overflow-hidden">
+            <div className="relative h-full rounded-2xl bg-[#0c0c0c] p-6 overflow-hidden">
               <div className="flex items-center justify-between mb-5">
                 <span className="text-sm text-white/45">Completed</span>
                 <span className="w-9 h-9 rounded-lg bg-white/5 text-white/70 flex items-center justify-center">
@@ -325,7 +325,7 @@ export default function ProfilePage() {
                 return (
                   <div
                     key={job.id}
-                    className="group relative rounded-xl border border-white/10 bg-[#121212] p-4 flex items-center justify-between gap-4 hover:border-white/25 hover:bg-white/[0.03] transition-all"
+                    className="group relative rounded-xl border border-white/10 bg-[#0c0c0c] p-4 flex items-center justify-between gap-4 hover:border-white/25 hover:bg-white/[0.03] transition-all"
                   >
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       <div

@@ -265,7 +265,7 @@ select {
   height: 4px;
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 0 0 5px #0e0e0e;
+  box-shadow: 0 0 0 5px #080808;
 }
 
 /* ---------- Mobile safe-area helpers (notches / home indicators) ---------- */

@@ -118,7 +118,7 @@ export default function ProcessingPage() {
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-[#0e0e0e] flex items-center justify-center">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
         <div className="text-white/40 animate-pulse-soft">Loading…</div>
       </div>
     )
@@ -126,7 +126,7 @@ export default function ProcessingPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0e0e0e] text-white">
+      <div className="min-h-screen bg-[#080808] text-white">
         <nav className="px-4 sm:px-6 py-4 sm:py-6">
           <div className="max-w-5xl mx-auto">
             <Link href="/" className="hover:opacity-80 transition-opacity">
@@ -136,7 +136,7 @@ export default function ProcessingPage() {
         </nav>
 
         <main className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24 animate-fade-in-up">
-          <div className="p-12 rounded-lg bg-gradient-to-br from-[#161616] to-[#0e0e0e] border border-white/10 text-center">
+          <div className="p-12 rounded-lg bg-gradient-to-br from-[#101010] to-[#080808] border border-white/10 text-center">
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500">
                 <AlertTriangleIcon width={32} height={32} />
@@ -164,7 +164,7 @@ export default function ProcessingPage() {
   )
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0e0e0e] text-white">
+    <div className="relative min-h-screen overflow-hidden bg-[#080808] text-white">
       <div className="glow-blob" style={{ width: 360, height: 360, top: 40, left: -80 }} />
       <div
         className="glow-blob"
@@ -204,7 +204,7 @@ export default function ProcessingPage() {
       </nav>
 
       <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-        <div className="mb-8 sm:mb-12 p-6 sm:p-8 rounded-lg bg-gradient-to-br from-[#161616] to-[#0e0e0e] border border-white/10 animate-fade-in-up">
+        <div className="mb-8 sm:mb-12 p-6 sm:p-8 rounded-lg bg-gradient-to-br from-[#101010] to-[#080808] border border-white/10 animate-fade-in-up">
           <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
             <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#4d7cff] animate-pulse" />
             <span className="text-xs sm:text-sm font-medium text-[#4d7cff]">PROCESSING</span>
@@ -213,7 +213,7 @@ export default function ProcessingPage() {
           <p className="text-white/60 text-sm sm:text-lg truncate">{job.original_filename}</p>
         </div>
 
-        <div className="mb-12 p-6 rounded-lg bg-[#161616] border border-white/10 animate-fade-in-up delay-100">
+        <div className="mb-12 p-6 rounded-lg bg-[#101010] border border-white/10 animate-fade-in-up delay-100">
           <div className="flex justify-between text-sm mb-3">
             <span className="font-medium">{STEPS[Math.min(currentStep - 1, 3)].label}…</span>
             <span className="tabular-nums font-semibold text-[#4d7cff]">{Math.round(barProgress)}%</span>

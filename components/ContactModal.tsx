@@ -62,7 +62,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-start sm:items-center justify-center z-50 px-4 py-6 overflow-y-auto animate-fade-in">
-      <div className="bg-[#161616] border border-white/10 rounded-2xl sm:rounded-lg p-6 sm:p-8 max-w-lg w-full my-auto animate-fade-in-up">
+      <div className="bg-[#101010] border border-white/10 rounded-2xl sm:rounded-lg p-6 sm:p-8 max-w-lg w-full my-auto animate-fade-in-up">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Contact us</h2>
           <button

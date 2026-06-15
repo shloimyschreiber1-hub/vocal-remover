@@ -421,13 +421,13 @@ export default function HomePage() {
   const isBusy = uploadState === 'uploading' || uploadState === 'starting'
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0e0e0e] text-white text-sm">
+    <div className="relative min-h-screen overflow-hidden bg-[#080808] text-white text-sm">
       {/* Ambient glow */}
       <div className="glow-blob" style={{ width: 460, height: 460, top: -160, left: '50%', marginLeft: -230 }} />
 
       {/* Top Nav */}
       <nav className="relative z-20 px-4 sm:px-6 py-4 sm:py-6">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link href="/" className="hover:opacity-80 transition-opacity">
             <img src="/logo-gradient.svg" alt="Havdolo" className="h-8 sm:h-9 w-auto" />
           </Link>
@@ -498,13 +498,14 @@ export default function HomePage() {
       {/* Upload card — overlaps the hero */}
       <main className="relative z-20 max-w-5xl mx-auto px-4 sm:px-6 -mt-12 sm:-mt-24">
         {!file ? (
+          <>
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`animate-soft-pulse group relative rounded-2xl sm:rounded-lg bg-[#141414] px-6 py-10 sm:p-12 text-center cursor-pointer transition-all duration-300 ${
-              isDragging ? 'bg-[#1b1b1b] scale-[1.01]' : 'active:bg-[#1b1b1b] hover:bg-[#171717]'
+            className={`animate-soft-pulse group relative rounded-2xl sm:rounded-lg bg-[#0e0e0e] px-6 py-10 sm:p-12 text-center cursor-pointer transition-all duration-300 ${
+              isDragging ? 'bg-[#151515] scale-[1.01]' : 'active:bg-[#151515] hover:bg-[#111111]'
             }`}
           >
             <input
@@ -535,8 +536,35 @@ export default function HomePage() {
               MP3, WAV, FLAC · up to 20MB · 1 credit per {MINUTES_PER_CREDIT} min
             </p>
           </div>
+
+          {/* Process steps — connected stepper */}
+          <div className="relative mt-10 sm:mt-12 grid grid-cols-3">
+            {/* Vertical connector dropping from the upload box */}
+            <span className="absolute left-1/2 -translate-x-1/2 -top-10 sm:-top-12 h-[3.5rem] sm:h-16 w-px bg-gradient-to-b from-white/5 to-[#4d7cff]/40" />
+            {[
+              { n: 1, t: 'Upload', d: 'Drop in any audio file' },
+              { n: 2, t: 'Separate', d: 'AI isolates the vocals' },
+              { n: 3, t: 'Download', d: 'Grab vocals or music' },
+            ].map((step, i, arr) => (
+              <div key={step.n} className="relative flex flex-col items-center text-center px-2">
+                {/* Connector lines */}
+                {i > 0 && (
+                  <span className="absolute top-4 right-1/2 left-0 h-px bg-gradient-to-l from-[#4d7cff]/40 to-white/5" />
+                )}
+                {i < arr.length - 1 && (
+                  <span className="absolute top-4 left-1/2 right-0 h-px bg-gradient-to-r from-[#4d7cff]/40 to-white/5" />
+                )}
+                <div className="relative z-10 w-8 h-8 rounded-full bg-[#0e0e0e] border border-[#4d7cff]/40 text-[#6b93ff] text-sm font-semibold flex items-center justify-center mb-3">
+                  {step.n}
+                </div>
+                <p className="text-sm font-semibold leading-tight">{step.t}</p>
+                <p className="mt-0.5 text-xs text-white/40 leading-snug">{step.d}</p>
+              </div>
+            ))}
+          </div>
+          </>
         ) : (
-          <div className="rounded-2xl sm:rounded-lg bg-[#141414] p-6 sm:p-8 animate-soft-pulse">
+          <div className="rounded-2xl sm:rounded-lg bg-[#0e0e0e] p-6 sm:p-8 animate-soft-pulse">
             <div className="mb-6 text-left">
               <p className="text-white text-lg sm:text-xl font-medium truncate">{file.name}</p>
               <p className="text-white/40 text-sm tabular-nums">
@@ -643,23 +671,6 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* How it works */}
-        <section className="mt-12 sm:mt-20">
-          <div className="grid sm:grid-cols-3 gap-8 sm:gap-12">
-            {[
-              { n: '01', t: 'Upload', d: 'Drop in any audio file — MP3, WAV, or FLAC.' },
-              { n: '02', t: 'Separate', d: 'Our AI isolates the vocals from the music.' },
-              { n: '03', t: 'Download', d: 'Grab the vocals, the music, or both.' },
-            ].map((step) => (
-              <div key={step.n} className="text-center">
-                <div className="text-sm font-mono text-[#6b93ff] mb-3 tracking-wider">{step.n}</div>
-                <h3 className="text-xl font-semibold mb-2">{step.t}</h3>
-                <p className="text-sm text-white/50 leading-relaxed">{step.d}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
         {/* Section divider */}
         <div className="section-divider mt-16 sm:mt-24" aria-hidden="true">
           <span className="section-divider__dot" />
@@ -672,10 +683,6 @@ export default function HomePage() {
 
           <div className="relative">
             <div className="text-center mb-8 sm:mb-10">
-              <p className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.25em] text-[#6b93ff] mb-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#4d7cff] animate-pulse-soft" />
-                Real results
-              </p>
               <h2 className="text-xl font-bold mb-2">Hear the difference</h2>
               <p className="text-sm text-white/55 max-w-2xl mx-auto leading-relaxed">
                 A sample of tracks that use this software.
@@ -699,7 +706,7 @@ export default function HomePage() {
                     }
                   `}
                 >
-                  <div className="relative rounded-2xl bg-[#101010] p-5 sm:p-6 overflow-hidden">
+                  <div className="relative rounded-2xl bg-[#0a0a0a] p-5 sm:p-6 overflow-hidden">
                     {/* Header: album art + track info */}
                     <div className="flex items-center gap-3 mb-4">
                       <div className="relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-white/5 shadow-lg">
@@ -791,7 +798,7 @@ export default function HomePage() {
       {/* Auth Prompt Modal */}
       {showAuthPrompt && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 px-6 animate-fade-in">
-          <div className="bg-[#161616] border border-white/10 rounded-lg p-8 max-w-md w-full animate-fade-in-up">
+          <div className="bg-[#101010] border border-white/10 rounded-lg p-8 max-w-md w-full animate-fade-in-up">
             <h2 className="text-xl font-bold mb-3">Create a free account to continue</h2>
             <p className="text-white/60 mb-6">
               Your file is ready and waiting — sign up or sign in and we&apos;ll pick up right

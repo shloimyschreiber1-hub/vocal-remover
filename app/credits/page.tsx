@@ -90,7 +90,7 @@ function CreditsContent() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0e0e0e] text-white text-sm">
+    <div className="relative min-h-screen overflow-hidden bg-[#080808] text-white text-sm">
       {/* Ambient glow */}
       <div className="glow-blob" style={{ width: 460, height: 460, top: -160, left: '50%', marginLeft: -230 }} />
 
@@ -135,7 +135,7 @@ function CreditsContent() {
         {/* Current Balance */}
         {profile && (
           <div className="mb-8 sm:mb-10 mx-auto max-w-md rounded-2xl p-px bg-gradient-to-br from-white/15 to-white/[0.03]">
-            <div className="rounded-2xl bg-[#101010] px-6 py-4 flex items-center justify-between">
+            <div className="rounded-2xl bg-[#0a0a0a] px-6 py-4 flex items-center justify-between">
               <span className="text-sm text-white/50">Current balance</span>
               <span className="text-lg font-bold tabular-nums">
                 <span className="text-[#ff8c42]">{profile.credits}</span>{' '}
@@ -170,7 +170,7 @@ function CreditsContent() {
                   Most popular
                 </span>
               )}
-              <div className="relative rounded-2xl bg-[#101010] p-6 sm:p-8 overflow-hidden">
+              <div className="relative rounded-2xl bg-[#0a0a0a] p-6 sm:p-8 overflow-hidden">
                 <div className="text-center mb-6">
                   <div className="flex items-baseline justify-center gap-2 mb-1">
                     <span className="text-5xl sm:text-6xl font-bold tabular-nums leading-none">{pack.credits}</span>
@@ -245,7 +245,7 @@ function CreditsContent() {
 
 export default function CreditsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0e0e0e]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#080808]" />}>
       <CreditsContent />
     </Suspense>
   )
