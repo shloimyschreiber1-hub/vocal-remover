@@ -41,9 +41,9 @@ export async function POST(request: NextRequest) {
     const userId = session.metadata?.userId
     const creditsToAdd = parseInt(session.metadata?.creditsToAdd || '0')
     const stripeSessionId = session.id
-    const amountUsd = (session.amount_total || 0) / 100
+    const amountGbp = (session.amount_total || 0) / 100
 
-    console.log('[Webhook] Metadata:', { userId, creditsToAdd, stripeSessionId, amountUsd })
+    console.log('[Webhook] Metadata:', { userId, creditsToAdd, stripeSessionId, amountGbp })
 
     if (!userId || !creditsToAdd) {
       console.error('[Webhook] Missing metadata in session:', session.id)
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       user_id: userId,
       stripe_session_id: stripeSessionId,
       credits_purchased: creditsToAdd,
-      amount_usd: amountUsd,
+      amount_gbp: amountGbp,
     })
 
     if (purchaseError) {
