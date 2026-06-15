@@ -53,12 +53,30 @@ export default function HomePage() {
     },
     {
       id: 'sample-2',
-      name: 'Abba',
-      artist: 'Mordechai Shapiro',
+      name: 'L\'chai Olamim',
+      artist: 'Matt Dubb, Mordechai Shapiro, Benny Friedman',
       albumArt: '/samples/album2.jpg',
       original: '/samples/track2-original.mp3',
       vocals: '/samples/track2-vocals.mp3',
       instrumental: '/samples/track2-instrumental.mp3',
+    },
+    {
+      id: 'sample-3',
+      name: 'Kel Mistater',
+      artist: 'Sruly Green',
+      albumArt: '/samples/album3.jpg',
+      original: '/samples/track3-original.mp3',
+      vocals: '/samples/track3-vocals.mp3',
+      instrumental: '/samples/track3-instrumental.mp3',
+    },
+    {
+      id: 'sample-4',
+      name: 'Yerei Shamayim',
+      artist: 'Shmueli Ungar',
+      albumArt: '/samples/album4.jpg',
+      original: '/samples/track4-original.mp3',
+      vocals: '/samples/track4-vocals.mp3',
+      instrumental: '/samples/track4-instrumental.mp3',
     },
   ]
 
@@ -410,8 +428,8 @@ export default function HomePage() {
       {/* Top Nav */}
       <nav className="relative z-20 px-4 sm:px-6 py-4 sm:py-6">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold tracking-tight hover:text-[#4d7cff] transition-colors">
-            Havdolo
+          <Link href="/" className="hover:opacity-80 transition-opacity">
+            <img src="/logo-gradient.svg" alt="Havdolo" className="h-8 sm:h-9 w-auto" />
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-3">

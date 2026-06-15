@@ -129,8 +129,8 @@ export default function ProcessingPage() {
       <div className="min-h-screen bg-[#0e0e0e] text-white">
         <nav className="px-4 sm:px-6 py-4 sm:py-6">
           <div className="max-w-5xl mx-auto">
-            <Link href="/" className="text-xl sm:text-2xl font-bold tracking-tight hover:text-[#4d7cff] transition-colors">
-              Havdolo
+            <Link href="/" className="hover:opacity-80 transition-opacity">
+              <img src="/logo-gradient.svg" alt="Havdolo" className="h-8 sm:h-9 w-auto" />
             </Link>
           </div>
         </nav>
@@ -173,8 +173,8 @@ export default function ProcessingPage() {
 
       <nav className="relative z-10 px-4 sm:px-6 py-4 sm:py-6">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <Link href="/" className="text-xl sm:text-2xl font-bold tracking-tight hover:text-[#4d7cff] transition-colors">
-            Havdolo
+          <Link href="/" className="hover:opacity-80 transition-opacity">
+            <img src="/logo-gradient.svg" alt="Havdolo" className="h-8 sm:h-9 w-auto" />
           </Link>
 
           {user && profile && (

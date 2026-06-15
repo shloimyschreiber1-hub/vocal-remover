@@ -5,6 +5,9 @@ import { ChunkLoadRecovery } from '@/components/ChunkLoadRecovery'
 export const metadata: Metadata = {
   title: 'Havdolo - Jewish Music Vocal Remover',
   description: 'The first AI stem separator built specifically for Jewish music',
+  icons: {
+    icon: '/logo.svg',
+  },
 }
 
 export default function RootLayout({

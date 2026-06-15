@@ -60,8 +60,8 @@ export default function AuthPage() {
     <div className="min-h-screen bg-[#0e0e0e] text-white flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-bold tracking-tight">
-            Havdolo
+          <Link href="/" className="hover:opacity-80 transition-opacity inline-block">
+            <img src="/logo-gradient.svg" alt="Havdolo" className="h-9 w-auto" />
           </Link>
         </div>
 

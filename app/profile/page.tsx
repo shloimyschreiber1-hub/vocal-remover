@@ -120,9 +120,9 @@ export default function ProfilePage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link
             href="/"
-            className="text-xl sm:text-2xl font-bold tracking-tight hover:text-[#4d7cff] transition-colors"
+            className="hover:opacity-80 transition-opacity"
           >
-            Havdolo
+            <img src="/logo-gradient.svg" alt="Havdolo" className="h-8 sm:h-9 w-auto" />
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-3">

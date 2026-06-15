@@ -5,9 +5,9 @@ import Stripe from 'stripe'
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 const PACKS = {
-  starter: { credits: 10, price: 999 },
-  producer: { credits: 50, price: 3999 },
-  studio: { credits: 150, price: 9999 },
+  starter: { credits: 1, price: 499 },
+  producer: { credits: 3, price: 1099 },
+  studio: { credits: 10, price: 2599 },
 }
 
 export async function POST(request: NextRequest) {
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       line_items: [
         {
           price_data: {
-            currency: 'gbp',
+            currency: 'usd',
             product_data: {
               name: `${pack.charAt(0).toUpperCase() + pack.slice(1)} Pack`,
               description: `${selectedPack.credits} credits for Havdolo`,
