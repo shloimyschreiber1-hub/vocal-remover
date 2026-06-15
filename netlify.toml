@@ -5,6 +5,13 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# Force HTTPS redirect
+[[redirects]]
+  from = "http://*"
+  to = "https://:splat"
+  status = 301
+  force = true
+
 # Official Next.js runtime for Netlify. Handles SSR, API routes (as functions),
 # middleware (as edge functions), and static assets automatically.
 [[plugins]]
@@ -20,3 +27,4 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    Content-Security-Policy = "upgrade-insecure-requests"
