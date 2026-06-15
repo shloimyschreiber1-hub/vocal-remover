@@ -7,6 +7,7 @@ import Link from 'next/link'
 import type { Database } from '@/lib/database.types'
 import { UploadIcon, SeparateIcon, CloseIcon, ArrowRightIcon, PlayIcon, PauseIcon } from '@/components/icons'
 import { ContactModal } from '@/components/ContactModal'
+import { creditsForDuration, MINUTES_PER_CREDIT } from '@/lib/credits'
 
 type Job = Database['public']['Tables']['jobs']['Row']
 type Profile = Database['public']['Tables']['profiles']['Row']
@@ -23,6 +24,7 @@ export default function HomePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [jobs, setJobs] = useState<Job[]>([])
   const [file, setFile] = useState<File | null>(null)
+  const [fileDuration, setFileDuration] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'starting' | 'error'>('idle')
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -239,9 +241,26 @@ export default function HomePage() {
     }
 
     setFile(selectedFile)
+    setFileDuration(null)
     setUploadState('idle')
     setUploadProgress(0)
+
+    // Read the track length so we can show how many credits it'll use
+    // (1 credit per 6 minutes). This runs entirely in the browser.
+    const objectUrl = URL.createObjectURL(selectedFile)
+    const probe = new Audio()
+    probe.preload = 'metadata'
+    probe.onloadedmetadata = () => {
+      if (Number.isFinite(probe.duration)) setFileDuration(probe.duration)
+      URL.revokeObjectURL(objectUrl)
+    }
+    probe.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+    }
+    probe.src = objectUrl
   }
+
+  const creditsNeeded = fileDuration ? creditsForDuration(fileDuration) : 1
 
   const handleUploadClick = () => {
     if (!file) return
@@ -251,7 +270,7 @@ export default function HomePage() {
       return
     }
 
-    if (profile && profile.credits === 0) {
+    if (profile && profile.credits < creditsNeeded) {
       router.push('/credits')
       return
     }
@@ -342,10 +361,15 @@ export default function HomePage() {
           jobId,
           storagePath,
           filename: fileToUpload.name,
+          duration: fileDuration,
         }),
       })
 
       if (!res.ok) {
+        if (res.status === 402) {
+          router.push('/credits')
+          return
+        }
         console.error('Upload failed:', await res.text())
         fail()
         return
@@ -487,7 +511,7 @@ export default function HomePage() {
             </p>
             <p className="text-sm text-white/40">
               or <span className="text-[#6b93ff] underline underline-offset-4">browse files</span>
-              {' · '}MP3, WAV, FLAC · up to 20MB
+              {' · '}MP3, WAV, FLAC · up to 20MB · 1 credit per {MINUTES_PER_CREDIT} min
             </p>
           </div>
         ) : (
@@ -496,7 +520,47 @@ export default function HomePage() {
               <p className="text-white text-xl font-medium truncate">{file.name}</p>
               <p className="text-white/40 text-sm tabular-nums">
                 {(file.size / (1024 * 1024)).toFixed(2)} MB
+                {fileDuration ? ` · ${formatTime(fileDuration)}` : ''}
               </p>
+            </div>
+
+            {/* Credit cost — 1 credit per 6 minutes of audio */}
+            <div
+              className={`mb-6 rounded-lg px-4 py-3 text-sm ${
+                creditsNeeded > 1
+                  ? 'bg-[#ff8c42]/10 border border-[#ff8c42]/25 text-[#ffb482]'
+                  : 'bg-white/5 border border-white/10 text-white/70'
+              }`}
+            >
+              {fileDuration ? (
+                <div className="flex items-center justify-between gap-3">
+                  <span>
+                    {creditsNeeded > 1 ? (
+                      <>
+                        This track is over {MINUTES_PER_CREDIT} min, so it&apos;ll use{' '}
+                        <span className="font-semibold">{creditsNeeded} credits</span>.
+                      </>
+                    ) : (
+                      <>
+                        This track uses <span className="font-semibold">1 credit</span>.
+                      </>
+                    )}
+                  </span>
+                  <span className="shrink-0 font-semibold tabular-nums">
+                    {creditsNeeded} {creditsNeeded === 1 ? 'credit' : 'credits'}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-white/50">
+                  Each credit covers up to {MINUTES_PER_CREDIT} minutes of audio.
+                </span>
+              )}
+              {user && profile && fileDuration && profile.credits < creditsNeeded && (
+                <p className="mt-2 text-[#ff8c42]">
+                  You have {profile.credits} {profile.credits === 1 ? 'credit' : 'credits'} —
+                  you&apos;ll need {creditsNeeded - profile.credits} more.
+                </p>
+              )}
             </div>
 
             {isBusy && (
@@ -542,6 +606,7 @@ export default function HomePage() {
               <button
                 onClick={() => {
                   setFile(null)
+                  setFileDuration(null)
                   setUploadProgress(0)
                   setUploadState('idle')
                 }}

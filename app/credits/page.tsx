@@ -122,7 +122,7 @@ function CreditsContent() {
           </div>
           <h1 className="text-3xl sm:text-5xl font-bold mb-3 sm:mb-4 px-4">Choose your plan</h1>
           <p className="text-base sm:text-xl text-white/60 max-w-2xl mx-auto px-4">
-            One credit = one track separation. No subscriptions, no recurring charges.
+            One credit covers up to 6 minutes of audio. No subscriptions, no recurring charges.
           </p>
         </div>
 
@@ -163,7 +163,7 @@ function CreditsContent() {
                   <div className="text-sm sm:text-base text-white/60">{pack.credits} credits</div>
                 </div>
                 <div className="text-xs sm:text-sm text-white/40">
-                  £{(pack.price / pack.credits).toFixed(2)} per track
+                  £{(pack.price / pack.credits).toFixed(2)} per 6 min
                 </div>
               </div>
 

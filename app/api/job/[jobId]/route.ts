@@ -111,7 +111,8 @@ export async function GET(
       console.error('LALAL.AI task error:', task?.error || task)
       internalStatus = 'failed'
 
-      // Refund the credit
+      // Refund the credits this job consumed (1 per 6-minute block)
+      const refundAmount = job.credits_used || 1
       const { data: profile } = await admin
         .from('profiles')
         .select('credits')
@@ -121,7 +122,7 @@ export async function GET(
       if (profile) {
         await admin
           .from('profiles')
-          .update({ credits: profile.credits + 1 })
+          .update({ credits: profile.credits + refundAmount })
           .eq('id', user.id)
       }
     } else if (taskStatus === 'progress') {

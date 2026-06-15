@@ -38,6 +38,7 @@ export interface Database {
           original_filename: string
           vocal_url: string | null
           instrumental_url: string | null
+          credits_used: number
           created_at: string
         }
         Insert: {
@@ -50,6 +51,7 @@ export interface Database {
           original_filename: string
           vocal_url?: string | null
           instrumental_url?: string | null
+          credits_used?: number
           created_at?: string
         }
         Update: {
@@ -62,6 +64,7 @@ export interface Database {
           original_filename?: string
           vocal_url?: string | null
           instrumental_url?: string | null
+          credits_used?: number
           created_at?: string
         }
         Relationships: []

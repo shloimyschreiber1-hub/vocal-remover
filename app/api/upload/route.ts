@@ -1,5 +1,6 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { creditsForDuration } from '@/lib/credits'
 
 // Allow up to a minute: this route pulls the original out of Supabase Storage
 // and forwards it to LALAL.AI, which can take a while for larger files.
@@ -115,12 +116,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // HTTP header values must be Latin-1 only. Filenames with non-ASCII
+    // characters (e.g. Hebrew) would throw "Cannot convert argument to a
+    // ByteString", so build a safe ASCII name for the header while keeping the
+    // original name (already stored above) and the real extension intact.
+    const ext = filename.includes('.') ? filename.split('.').pop() : ''
+    const asciiBase =
+      filename
+        .replace(/\.[^.]*$/, '')
+        .replace(/[^\x20-\x7E]/g, '_')
+        .replace(/["\\]/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .trim() || 'track'
+    const headerFilename = ext ? `${asciiBase}.${ext}` : asciiBase
+
     // 1. Upload the audio to LALAL.AI (raw binary)
     const lalalUpload = await fetch('https://www.lalal.ai/api/v1/upload/', {
       method: 'POST',
       headers: {
         'X-License-Key': process.env.LALAL_API_KEY!,
-        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Disposition': `attachment; filename="${headerFilename}"`,
       },
       body: fileBuffer,
     })
@@ -137,6 +153,26 @@ export async function POST(request: NextRequest) {
 
     const uploadResult = await lalalUpload.json()
     const sourceId = uploadResult.id
+
+    // LALAL returns the audio duration (seconds) — the authoritative source for
+    // billing. One credit covers up to 6 minutes; longer tracks cost more.
+    const durationSeconds = Number(uploadResult.duration) || 0
+    const creditsNeeded = creditsForDuration(durationSeconds)
+
+    // Make sure the user can actually afford this track before we kick off the
+    // (paid) separation. Abort cleanly if they're short on credits.
+    if (profile.credits < creditsNeeded) {
+      await refund(admin, jobId, user.id, profile.credits)
+      return NextResponse.json(
+        {
+          error: 'Not enough credits',
+          detail: `This track needs ${creditsNeeded} credits but you have ${profile.credits}.`,
+          creditsNeeded,
+          credits: profile.credits,
+        },
+        { status: 402 }
+      )
+    }
 
     // 2. Start ONE vocals separation. The result contains BOTH the vocal stem
     //    and the instrumental ("back") track, so a single task is enough.
@@ -178,6 +214,7 @@ export async function POST(request: NextRequest) {
         lalal_job_id: sourceId,
         lalal_vocal_task_id: taskId,
         status: 'analysing',
+        credits_used: creditsNeeded,
       })
       .eq('id', jobId)
 
@@ -185,17 +222,17 @@ export async function POST(request: NextRequest) {
       console.error('Job update error:', updateError)
     }
 
-    // Deduct 1 credit
+    // Deduct credits (1 per started 6-minute block)
     const { error: creditError } = await admin
       .from('profiles')
-      .update({ credits: profile.credits - 1 })
+      .update({ credits: profile.credits - creditsNeeded })
       .eq('id', user.id)
 
     if (creditError) {
       console.error('Credit deduction error:', creditError)
     }
 
-    return NextResponse.json({ jobId })
+    return NextResponse.json({ jobId, creditsUsed: creditsNeeded })
   } catch (error) {
     console.error('Upload error:', error)
     return NextResponse.json(

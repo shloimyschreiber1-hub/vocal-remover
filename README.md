@@ -258,7 +258,9 @@ predictable for all users.
 ## Credits System
 
 - Users start with 0 free credits
-- Each separation job costs 1 credit
+- Each credit covers up to 6 minutes of audio; longer tracks cost 1 extra credit
+  per additional (started) 6-minute block (e.g. a 7-minute track costs 2 credits).
+  Duration is read from LALAL.AI's upload response, so billing is authoritative.
 - Credit packs:
   - Starter: 10 credits - £9.99
   - Producer: 50 credits - £39.99
