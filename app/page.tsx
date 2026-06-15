@@ -477,20 +477,20 @@ export default function HomePage() {
       </nav>
 
       {/* Hero — matches the nav content width */}
-      <header className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-12 sm:pt-24 pb-20 sm:pb-40 text-center">
-        <p className="animate-fade-in-up inline-flex items-center gap-2 text-sm uppercase tracking-[0.25em] text-[#6b93ff]">
+      <header className="relative z-10 max-w-5xl mx-auto px-5 sm:px-6 pt-10 sm:pt-24 pb-20 sm:pb-40 text-center">
+        <p className="animate-fade-in-up inline-flex items-center gap-2 text-xs sm:text-sm uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#6b93ff]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#4d7cff] animate-pulse-soft" />
           The first of its kind
         </p>
 
-        <h1 className="mt-6 text-5xl sm:text-6xl md:text-7xl font-bold leading-[1.03] tracking-tight">
+        <h1 className="mt-5 sm:mt-6 text-[2.4rem] sm:text-6xl md:text-7xl font-bold leading-[1.08] sm:leading-[1.03] tracking-tight text-balance">
           <span className="block animate-fade-in-up delay-100">AI-powered vocal remover</span>
           <span className="block animate-fade-in-up delay-200">
             made for <span className="shimmer-text">Jewish music</span>.
           </span>
         </h1>
 
-        <p className="mt-4 sm:mt-7 animate-fade-in-up delay-300 text-sm text-white/55 max-w-xl mx-auto leading-relaxed px-4">
+        <p className="mt-4 sm:mt-7 animate-fade-in-up delay-300 text-sm text-white/55 max-w-xl mx-auto leading-relaxed">
           Trained on hundreds of Jewish songs, our AI understands the unique textures of Jewish music.
         </p>
       </header>
@@ -503,8 +503,8 @@ export default function HomePage() {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`animate-soft-pulse group relative rounded-lg bg-[#141414] p-12 text-center cursor-pointer transition-all duration-300 ${
-              isDragging ? 'bg-[#1b1b1b] scale-[1.01]' : 'hover:bg-[#171717]'
+            className={`animate-soft-pulse group relative rounded-2xl sm:rounded-lg bg-[#141414] px-6 py-10 sm:p-12 text-center cursor-pointer transition-all duration-300 ${
+              isDragging ? 'bg-[#1b1b1b] scale-[1.01]' : 'active:bg-[#1b1b1b] hover:bg-[#171717]'
             }`}
           >
             <input
@@ -524,18 +524,21 @@ export default function HomePage() {
               </div>
             </div>
 
-            <p className="text-xl font-medium mb-2">
-              {isDragging ? 'Drop it here' : 'Drop your track to begin'}
+            <p className="text-lg sm:text-xl font-medium mb-2">
+              {isDragging ? 'Drop it here' : 'Tap to upload your track'}
             </p>
             <p className="text-sm text-white/40">
-              or <span className="text-[#6b93ff] underline underline-offset-4">browse files</span>
-              {' · '}MP3, WAV, FLAC · up to 20MB · 1 credit per {MINUTES_PER_CREDIT} min
+              <span className="hidden sm:inline">or </span>
+              <span className="text-[#6b93ff] underline underline-offset-4">browse files</span>
+            </p>
+            <p className="mt-2 text-xs text-white/30">
+              MP3, WAV, FLAC · up to 20MB · 1 credit per {MINUTES_PER_CREDIT} min
             </p>
           </div>
         ) : (
-          <div className="rounded-lg bg-[#141414] p-8 animate-soft-pulse">
+          <div className="rounded-2xl sm:rounded-lg bg-[#141414] p-6 sm:p-8 animate-soft-pulse">
             <div className="mb-6 text-left">
-              <p className="text-white text-xl font-medium truncate">{file.name}</p>
+              <p className="text-white text-lg sm:text-xl font-medium truncate">{file.name}</p>
               <p className="text-white/40 text-sm tabular-nums">
                 {(file.size / (1024 * 1024)).toFixed(2)} MB
                 {fileDuration ? ` · ${formatTime(fileDuration)}` : ''}
@@ -604,12 +607,12 @@ export default function HomePage() {
               </div>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex flex-col-reverse sm:flex-row gap-3">
               <button
                 onClick={handleUploadClick}
                 disabled={isBusy}
-                className={`flex flex-1 items-center justify-center gap-2 px-8 py-3 bg-[#4d7cff] text-white rounded-lg font-medium transition-all ${
-                  isBusy ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[#3f6cf5] hover:scale-[1.02]'
+                className={`flex flex-1 items-center justify-center gap-2 px-8 py-3.5 sm:py-3 bg-[#4d7cff] text-white rounded-lg font-medium transition-all ${
+                  isBusy ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[#3f6cf5] active:scale-[0.99] sm:hover:scale-[1.02]'
                 }`}
               >
                 {!isBusy && uploadState !== 'error' && <SeparateIcon width={18} height={18} />}
@@ -630,7 +633,7 @@ export default function HomePage() {
                 }}
                 disabled={isBusy}
                 className={`flex items-center justify-center gap-2 px-6 py-3 border border-white/15 rounded-lg font-medium transition-colors ${
-                  isBusy ? 'opacity-50 cursor-not-allowed' : 'hover:border-white/40'
+                  isBusy ? 'opacity-50 cursor-not-allowed' : 'hover:border-white/40 active:border-white/40'
                 }`}
               >
                 <CloseIcon width={16} height={16} />
@@ -748,20 +751,20 @@ export default function HomePage() {
                             key={key}
                             onClick={() => handlePlaySample(track.id, key)}
                             className={`
-                              flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5
+                              flex-1 min-w-0 px-2.5 sm:px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5
                               ${
                                 active
                                   ? 'bg-[#4d7cff] text-white hover:bg-[#3f6cf5]'
-                                  : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
+                                  : 'bg-white/5 text-white/70 hover:bg-white/10 active:bg-white/10 hover:text-white'
                               }
                             `}
                           >
                             {active ? (
-                              <PauseIcon width={12} height={12} />
+                              <PauseIcon width={12} height={12} className="shrink-0" />
                             ) : (
-                              <PlayIcon width={12} height={12} />
+                              <PlayIcon width={12} height={12} className="shrink-0" />
                             )}
-                            {label}
+                            <span className="truncate">{label}</span>
                           </button>
                         )
                       })}
@@ -775,7 +778,7 @@ export default function HomePage() {
         </section>
 
 
-        <footer className="mt-20 pb-16 text-center">
+        <footer className="mt-20 pb-16 safe-pb text-center">
           <button
             onClick={() => setShowContactModal(true)}
             className="text-white/60 hover:text-[#4d7cff] transition-colors text-sm font-medium"

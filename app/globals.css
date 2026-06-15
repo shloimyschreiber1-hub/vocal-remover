@@ -11,6 +11,43 @@
 
 html {
   scroll-behavior: smooth;
+  /* Stop iOS from auto-inflating text in landscape / after orientation change */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  /* Crisper text on mobile retina screens */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Kill the grey flash when tapping buttons/links on touch devices */
+  -webkit-tap-highlight-color: transparent;
+  /* The ambient glow blobs can extend past the viewport — never let that
+     create a horizontal scrollbar on phones */
+  overflow-x: hidden;
+}
+
+/* Make every interactive control feel native on touch: no tap flash and
+   immediate response to taps without the 300ms delay */
+button,
+a,
+[role='button'],
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Respect users who prefer less motion (also saves battery on phones) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ---------- Keyframes ---------- */
@@ -229,4 +266,18 @@ html {
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.25);
   box-shadow: 0 0 0 5px #0e0e0e;
+}
+
+/* ---------- Mobile safe-area helpers (notches / home indicators) ---------- */
+.safe-px {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+.safe-pt {
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+
+.safe-pb {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
 }

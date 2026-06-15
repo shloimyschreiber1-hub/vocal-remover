@@ -110,9 +110,9 @@ export default function AuthPage() {
               type="submit"
               disabled={loading}
               className={`
-                flex w-full items-center justify-center gap-2 px-6 py-3 bg-[#4d7cff] text-white rounded-md font-medium
+                flex w-full items-center justify-center gap-2 px-6 py-3.5 sm:py-3 bg-[#4d7cff] text-white rounded-md font-medium
                 transition-colors
-                ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#3f6cf5]'}
+                ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#3f6cf5] active:bg-[#3f6cf5]'}
               `}
             >
               {loading ? 'Loading...' : isSignUp ? 'Sign up' : 'Sign in'}

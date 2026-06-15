@@ -437,7 +437,7 @@ export default function ResultsPage() {
         <div className="grid sm:grid-cols-[1.5fr_1fr] gap-3 sm:gap-4 mb-12 sm:mb-16">
           <button
             onClick={downloadBoth}
-            className="flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-[#4d7cff] to-[#6b93ff] hover:scale-[1.01] transition-all"
+            className="flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-[#4d7cff] to-[#6b93ff] hover:scale-[1.01] active:scale-[0.99] transition-all"
           >
             {bothDownloaded ? (
               <CheckIcon width={18} height={18} />

@@ -189,11 +189,11 @@ function CreditsContent() {
                   onClick={() => handleBuyPack(pack.id)}
                   disabled={loadingPack === pack.id}
                   className={`
-                    flex w-full items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all
+                    flex w-full items-center justify-center gap-2 px-6 py-3.5 sm:py-3 rounded-lg font-semibold transition-all
                     ${
                       pack.highlight
-                        ? 'bg-[#4d7cff] text-white hover:bg-[#3f6cf5] hover:scale-[1.02]'
-                        : 'bg-white/5 text-white hover:bg-white/10'
+                        ? 'bg-[#4d7cff] text-white hover:bg-[#3f6cf5] hover:scale-[1.02] active:scale-[0.99]'
+                        : 'bg-white/5 text-white hover:bg-white/10 active:bg-white/10'
                     }
                     ${loadingPack === pack.id ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
