@@ -284,15 +284,18 @@ export default function HomePage() {
     if (!file) return
 
     if (!user) {
+      console.log('User not logged in, showing auth prompt')
       setShowAuthPrompt(true)
       return
     }
 
     if (profile && profile.credits < creditsNeeded) {
+      console.log('Insufficient credits, redirecting to credits page')
       router.push('/credits')
       return
     }
 
+    console.log('Starting upload with user:', user.id)
     uploadFile(file)
   }
 
