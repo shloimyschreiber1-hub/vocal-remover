@@ -226,12 +226,45 @@ export default function HomePage() {
           .limit(5)
 
         setJobs(jobsData || [])
+      } else {
+        setProfile(null)
+        setJobs([])
       }
 
       setLoading(false)
     }
 
     loadData()
+
+    // Listen for auth state changes (sign in, sign out)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user)
+        // Reload profile and jobs when user signs in
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data }) => setProfile(data))
+        
+        supabase
+          .from('jobs')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false })
+          .limit(5)
+          .then(({ data }) => setJobs(data || []))
+      } else {
+        setUser(null)
+        setProfile(null)
+        setJobs([])
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
 
   const handleFileSelect = (selectedFile: File) => {
