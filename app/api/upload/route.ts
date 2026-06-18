@@ -1,6 +1,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { creditsForDuration } from '@/lib/credits'
+import { getOrCreateProfile } from '@/lib/profiles'
 
 // Allow up to a minute: this route pulls the original out of Supabase Storage
 // and forwards it to LALAL.AI, which can take a while for larger files.
@@ -58,17 +59,13 @@ export async function POST(request: NextRequest) {
     // Service-role client for all storage + DB writes (bypasses RLS safely)
     const admin = createAdminClient()
 
-    const { data: profile, error: profileError } = await admin
-      .from('profiles')
-      .select('credits')
-      .eq('id', user.id)
-      .single()
+    const { data: profile, error: profileError } = await getOrCreateProfile(admin, user.id)
 
     if (profileError || !profile) {
-      console.error('Profile lookup error:', profileError)
+      console.error('Profile lookup/create error:', profileError)
       return NextResponse.json(
-        { error: 'Profile not found', detail: profileError?.message },
-        { status: 404 }
+        { error: 'Profile unavailable', detail: profileError?.message },
+        { status: 500 }
       )
     }
 

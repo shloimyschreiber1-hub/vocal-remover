@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { getOrCreateProfile } from '@/lib/profiles'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
@@ -33,6 +34,12 @@ export async function POST(request: NextRequest) {
     }
 
     const selectedPack = PACKS[pack as keyof typeof PACKS]
+    const { error: profileError } = await getOrCreateProfile(createAdminClient(), user.id)
+
+    if (profileError) {
+      console.error('Profile lookup/create error:', profileError)
+      return NextResponse.json({ error: 'Profile unavailable' }, { status: 500 })
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],

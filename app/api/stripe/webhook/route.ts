@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server'
+import { getOrCreateProfile } from '@/lib/profiles'
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
@@ -54,15 +55,11 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient()
     console.log('[Webhook] Admin client created')
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('credits')
-      .eq('id', userId)
-      .single()
+    const { data: profile, error: profileError } = await getOrCreateProfile(supabase, userId)
 
     if (profileError || !profile) {
-      console.error('[Webhook] Profile not found or error:', profileError, 'userId:', userId)
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+      console.error('[Webhook] Profile lookup/create error:', profileError, 'userId:', userId)
+      return NextResponse.json({ error: 'Profile unavailable' }, { status: 500 })
     }
 
     console.log('[Webhook] Current credits:', profile.credits, 'Adding:', creditsToAdd)
