@@ -8,6 +8,11 @@ import type { Database } from '@/lib/database.types'
 import { UploadIcon, SeparateIcon, CloseIcon, ArrowRightIcon, PlayIcon, PauseIcon } from '@/components/icons'
 import { ContactModal } from '@/components/ContactModal'
 import { creditsForDuration, MINUTES_PER_CREDIT } from '@/lib/credits'
+import dynamic from 'next/dynamic'
+
+const BackgroundPaperShaders = dynamic(() => import('@/components/ui/background-paper-shaders'), {
+  ssr: false,
+})
 
 type Job = Database['public']['Tables']['jobs']['Row']
 type Profile = Database['public']['Tables']['profiles']['Row']
@@ -30,6 +35,7 @@ export default function HomePage() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [showContactModal, setShowContactModal] = useState(false)
+  const [showHowItWorksModal, setShowHowItWorksModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [playingTrack, setPlayingTrack] = useState<string | null>(null)
   const [playingVersion, setPlayingVersion] = useState<'original' | 'vocals' | 'instrumental'>('original')
@@ -457,9 +463,12 @@ export default function HomePage() {
   const isBusy = uploadState === 'uploading' || uploadState === 'starting'
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#080808] text-white text-sm">
-      {/* Ambient glow */}
-      <div className="glow-blob" style={{ width: 460, height: 460, top: -160, left: '50%', marginLeft: -230 }} />
+    <div className="relative min-h-screen overflow-hidden text-white text-sm" style={{ background: 'transparent' }}>
+      {/* Background Paper Shaders */}
+      <BackgroundPaperShaders />
+      
+      {/* Ambient glow overlay */}
+      <div className="glow-blob relative" style={{ width: 460, height: 460, top: -160, left: '50%', marginLeft: -230, zIndex: 1 }} />
 
       {/* Top Nav */}
       <nav className="relative z-20 px-4 sm:px-6 py-4 sm:py-6">
@@ -468,7 +477,7 @@ export default function HomePage() {
             <img src="/logo-gradient.svg" alt="Havdolo" className="h-8 sm:h-9 w-auto" />
           </Link>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-4 sm:gap-5">
             {loading ? null : user ? (
               <>
                 <Link
@@ -540,8 +549,8 @@ export default function HomePage() {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`animate-soft-pulse group relative rounded-2xl sm:rounded-lg bg-[#0e0e0e] px-6 py-10 sm:p-12 text-center cursor-pointer transition-all duration-300 ${
-              isDragging ? 'bg-[#151515] scale-[1.01]' : 'active:bg-[#151515] hover:bg-[#111111]'
+            className={`animate-soft-pulse group relative rounded-2xl sm:rounded-lg bg-[#000000] px-6 py-10 sm:p-12 text-center cursor-pointer transition-all duration-300 ${
+              isDragging ? 'bg-[#000000] scale-[1.01]' : 'active:bg-[#000000] hover:bg-[#000000]'
             }`}
           >
             <input
@@ -573,34 +582,22 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Process steps — connected stepper */}
-          <div className="relative mt-10 sm:mt-12 grid grid-cols-3">
-            {/* Vertical connector dropping from the upload box */}
-            <span className="absolute left-1/2 -translate-x-1/2 -top-10 sm:-top-12 h-[3.5rem] sm:h-16 w-px bg-gradient-to-b from-white/5 to-[#4d7cff]/40" />
-            {[
-              { n: 1, t: 'Upload', d: 'Drop in any audio file' },
-              { n: 2, t: 'Separate', d: 'AI isolates the vocals' },
-              { n: 3, t: 'Download', d: 'Grab vocals or music' },
-            ].map((step, i, arr) => (
-              <div key={step.n} className="relative flex flex-col items-center text-center px-2">
-                {/* Connector lines */}
-                {i > 0 && (
-                  <span className="absolute top-4 right-1/2 left-0 h-px bg-gradient-to-l from-[#4d7cff]/40 to-white/5" />
-                )}
-                {i < arr.length - 1 && (
-                  <span className="absolute top-4 left-1/2 right-0 h-px bg-gradient-to-r from-[#4d7cff]/40 to-white/5" />
-                )}
-                <div className="relative z-10 w-8 h-8 rounded-full bg-[#0e0e0e] border border-[#4d7cff]/40 text-[#6b93ff] text-sm font-semibold flex items-center justify-center mb-3">
-                  {step.n}
-                </div>
-                <p className="text-sm font-semibold leading-tight">{step.t}</p>
-                <p className="mt-0.5 text-xs text-white/40 leading-snug">{step.d}</p>
-              </div>
-            ))}
+          {/* How it works link */}
+          <div className="mt-10 sm:mt-12 text-center">
+            <button
+              onClick={() => setShowHowItWorksModal(true)}
+              className="inline-flex items-center gap-1.5 text-sm text-[#6b93ff] hover:text-[#4d7cff] transition-colors font-medium"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4M12 8h.01" />
+              </svg>
+              How it works
+            </button>
           </div>
           </>
         ) : (
-          <div className="rounded-2xl sm:rounded-lg bg-[#0e0e0e] p-6 sm:p-8 animate-soft-pulse">
+          <div className="rounded-2xl sm:rounded-lg bg-[#000000] p-6 sm:p-8 animate-soft-pulse">
             <div className="mb-6 text-left">
               <p className="text-white text-lg sm:text-xl font-medium truncate">{file.name}</p>
               <p className="text-white/40 text-sm tabular-nums">
@@ -707,26 +704,45 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Section divider */}
-        <div className="section-divider mt-16 sm:mt-24" aria-hidden="true">
-          <span className="section-divider__dot" />
-        </div>
+      </main>
 
-        {/* Before & After Demo */}
-        <section className="relative mt-8 sm:mt-12">
-          {/* Ambient glow instead of a solid container */}
-          <div className="glow-blob" style={{ width: 380, height: 380, top: 40, left: '50%', marginLeft: -190 }} />
+      {/* ── Samples ─ "Hear the difference" — its own full-width section ── */}
+      <section className="relative z-10 mt-24 sm:mt-32 border-t border-white/[0.06] bg-gradient-to-b from-white/[0.025] via-transparent to-transparent">
+        {/* Ambient glow anchored to the top of the section */}
+        <div className="glow-blob" style={{ width: 440, height: 440, top: -140, left: '50%', marginLeft: -220 }} />
 
-          <div className="relative">
-            <div className="text-center mb-8 sm:mb-10">
-              <h2 className="text-xl font-bold mb-2">Hear the difference</h2>
-              <p className="text-sm text-white/55 max-w-2xl mx-auto leading-relaxed">
-                A sample of tracks that use this software.
-              </p>
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+          {/* Section header */}
+          <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+            <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-[#6b93ff] mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#4d7cff] animate-pulse-soft" />
+              Real results
+            </p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-[1.1]">
+              Hear the difference
+            </h2>
+            <p className="mt-4 text-sm sm:text-base text-white/55 leading-relaxed">
+              Switch between the original, the isolated vocals, and the instrumental.
+              Every track below was separated with Havdolo.
+            </p>
+
+            {/* Legend */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-white/45">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-white/40" /> Original
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#4d7cff]" /> Vocals
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#6b93ff]" /> Music
+              </span>
             </div>
+          </div>
 
-          <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
-            {sampleTracks.map((track, index) => {
+          {/* Track grid */}
+          <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+            {sampleTracks.map((track) => {
               const isPlaying = playingTrack === track.id
               const activeVersion = isPlaying ? playingVersion : null
 
@@ -734,32 +750,46 @@ export default function HomePage() {
                 <div
                   key={track.id}
                   className={`
-                    group relative rounded-2xl p-px transition-all
+                    group relative rounded-2xl p-px transition-all duration-300
                     ${
                       isPlaying
-                        ? 'bg-gradient-to-br from-[#4d7cff] to-[#4d7cff]/20 shadow-xl shadow-[#4d7cff]/20'
-                        : 'bg-gradient-to-br from-white/15 to-white/[0.03] hover:from-white/25'
+                        ? 'bg-gradient-to-br from-[#4d7cff] to-[#4d7cff]/20 shadow-2xl shadow-[#4d7cff]/20'
+                        : 'bg-gradient-to-br from-white/15 to-white/[0.03] hover:from-white/30 hover:to-white/[0.06]'
                     }
                   `}
                 >
-                  <div className="relative rounded-2xl bg-[#0a0a0a] p-5 sm:p-6 overflow-hidden">
+                  <div className="relative rounded-2xl bg-[#000000] p-5 sm:p-6 overflow-hidden">
+                    {/* Soft accent wash when playing */}
+                    {isPlaying && (
+                      <div className="pointer-events-none absolute -top-16 -right-16 w-40 h-40 rounded-full bg-[#4d7cff]/15 blur-3xl" />
+                    )}
+
                     {/* Header: album art + track info */}
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-white/5 shadow-lg">
+                    <div className="relative flex items-center gap-3.5 mb-5">
+                      <div className="relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-white/5 shadow-lg ring-1 ring-white/10">
                         <img
                           src={track.albumArt}
                           alt={`${track.name} album art`}
                           className="w-full h-full object-cover"
                         />
+                        {isPlaying && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/45 backdrop-blur-[1px]">
+                            <span className="flex items-end gap-[3px] h-4">
+                              <span className="eq-bar h-full delay-100" />
+                              <span className="eq-bar h-full delay-300" />
+                              <span className="eq-bar h-full" />
+                            </span>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-xl leading-tight">{track.name}</h3>
-                        <p className="text-sm text-white/40 mt-0.5">{track.artist}</p>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-lg sm:text-xl leading-tight truncate">{track.name}</h3>
+                        <p className="text-sm text-white/40 mt-0.5 truncate">{track.artist}</p>
                       </div>
                     </div>
 
                     {/* Clickable progress bar */}
-                    <div className="mb-4">
+                    <div className="relative mb-5">
                       <div 
                         className="h-2 rounded-full bg-white/10 overflow-hidden cursor-pointer hover:bg-white/15 transition-colors"
                         onClick={(e) => handleSeek(track.id, e)}
@@ -782,7 +812,7 @@ export default function HomePage() {
                     </div>
 
                     {/* Version toggle buttons */}
-                    <div className="flex gap-2">
+                    <div className="relative flex gap-2">
                       {([
                         { key: 'original', label: 'Original' },
                         { key: 'vocals', label: 'Vocals' },
@@ -817,24 +847,22 @@ export default function HomePage() {
               )
             })}
           </div>
-          </div>
-        </section>
+        </div>
+      </section>
 
-
-        <footer className="mt-20 pb-16 safe-pb text-center">
-          <button
-            onClick={() => setShowContactModal(true)}
-            className="text-white/60 hover:text-[#4d7cff] transition-colors text-sm font-medium"
-          >
-            Contact us
-          </button>
-        </footer>
-      </main>
+      <footer className="relative z-10 pb-16 safe-pb text-center">
+        <button
+          onClick={() => setShowContactModal(true)}
+          className="text-white/60 hover:text-[#4d7cff] transition-colors text-sm font-medium"
+        >
+          Contact us
+        </button>
+      </footer>
 
       {/* Auth Prompt Modal */}
       {showAuthPrompt && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 px-6 animate-fade-in">
-          <div className="bg-[#101010] border border-white/10 rounded-lg p-8 max-w-md w-full animate-fade-in-up">
+          <div className="bg-[#000000] border border-white/10 rounded-lg p-8 max-w-md w-full animate-fade-in-up">
             <h2 className="text-xl font-bold mb-3">Create a free account to continue</h2>
             <p className="text-white/60 mb-6">
               Your file is ready and waiting — sign up or sign in and we&apos;ll pick up right
@@ -862,6 +890,81 @@ export default function HomePage() {
             >
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* How It Works Modal */}
+      {showHowItWorksModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 px-4 animate-fade-in">
+          <div className="bg-[#000000] border border-white/10 rounded-2xl sm:rounded-lg p-6 sm:p-8 max-w-lg w-full animate-fade-in-up">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">How it works</h2>
+              <button
+                onClick={() => setShowHowItWorksModal(false)}
+                className="text-white/40 hover:text-white transition-colors"
+              >
+                <CloseIcon width={20} height={20} />
+              </button>
+            </div>
+
+            <div className="space-y-5 mb-6">
+              {[
+                { n: 1, t: 'Upload', d: 'Drop in any audio file (MP3, WAV, or FLAC) up to 20MB. Our AI will analyze the track and prepare it for processing.' },
+                { n: 2, t: 'Separate', d: 'Our AI, specially trained on hundreds of Jewish songs, isolates the vocals from the music with incredible accuracy.' },
+                { n: 3, t: 'Download', d: 'Get both versions: isolated vocals and instrumental track. Perfect for karaoke, remixes, or learning.' },
+              ].map((step) => (
+                <div key={step.n} className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#4d7cff]/15 border border-[#4d7cff]/40 text-[#6b93ff] text-sm font-semibold flex items-center justify-center">
+                    {step.n}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-base mb-1">{step.t}</p>
+                    <p className="text-sm text-white/60 leading-relaxed">{step.d}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-[#4d7cff]/10 border border-[#4d7cff]/25 rounded-lg p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#ff8c42]/20 text-[#ff8c42] text-xs font-bold flex items-center justify-center mt-0.5">
+                  $
+                </div>
+                <div>
+                  <p className="font-semibold text-base mb-1.5 text-white">Credits & Pricing</p>
+                  <p className="text-sm text-white/70 leading-relaxed mb-2">
+                    Processing uses <span className="font-semibold text-[#ff8c42]">1 credit per {MINUTES_PER_CREDIT} minutes</span> of audio. Longer tracks will use multiple credits automatically.
+                  </p>
+                  <p className="text-sm text-white/70 leading-relaxed">
+                    Buy credits in flexible packages to fit your needs. Credits never expire and you only pay for what you use.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-white/10">
+              <p className="text-sm text-white/60 mb-4 text-center">
+                Have questions about pricing, credits, or how our AI works?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowHowItWorksModal(false)
+                    setShowContactModal(true)
+                  }}
+                  className="flex-1 px-6 py-3 bg-[#4d7cff] text-white rounded-lg font-medium hover:bg-[#3f6cf5] transition-all hover:scale-[1.02]"
+                >
+                  Contact us
+                </button>
+                <button
+                  onClick={() => setShowHowItWorksModal(false)}
+                  className="px-6 py-3 border border-white/20 rounded-lg font-medium hover:border-white/50 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
