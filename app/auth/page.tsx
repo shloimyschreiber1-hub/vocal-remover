@@ -32,7 +32,11 @@ export default function AuthPage() {
         })
 
         if (error) throw error
-        setMessage('Check your email to confirm your account')
+
+        await new Promise(resolve => setTimeout(resolve, 100))
+
+        router.push('/')
+        router.refresh()
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,

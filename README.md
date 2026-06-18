@@ -129,42 +129,48 @@ Your `.env.local` file is already configured with:
 - LALAL.AI API key ✓
 - Stripe keys (add these):
 
-Get your Stripe keys from https://dashboard.stripe.com/test/apikeys and add them to `.env.local`:
+Get your live Stripe keys from https://dashboard.stripe.com/apikeys and add them to `.env.local`:
 
 ```
-STRIPE_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_live_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 ```
 
-For the webhook secret, you'll need to:
-1. Install Stripe CLI: https://stripe.com/docs/stripe-cli
-2. Run `stripe listen --forward-to localhost:3000/api/stripe/webhook`
+For the live webhook secret, you'll need to:
+1. In the Stripe Dashboard (live mode), create a webhook endpoint for your deployed URL: `https://your-domain.com/api/stripe/webhook`
+2. Subscribe to `checkout.session.completed`
 3. Copy the webhook signing secret that starts with `whsec_`
-4. Add it to `.env.local` as `STRIPE_WEBHOOK_SECRET`
+4. Add it to `.env.local` and your hosting environment as `STRIPE_WEBHOOK_SECRET`
 
-#### Email Configuration (for Contact Form)
+#### SendGrid Configuration (for Contact Form)
 
-To enable the contact form to send emails, add these to `.env.local`:
+To enable the contact form to send emails via SendGrid, follow these steps:
 
+1. **Create a SendGrid account**:
+   - Go to https://signup.sendgrid.com/
+   - Sign up for a free account (100 emails/day free)
+
+2. **Create an API Key**:
+   - Go to Settings → API Keys
+   - Click "Create API Key"
+   - Choose "Restricted Access"
+   - Enable "Mail Send" permission (Full Access)
+   - Copy the API key (you'll only see it once!)
+
+3. **Verify your sender email**:
+   - Go to Settings → Sender Authentication
+   - Click "Verify a Single Sender"
+   - Add `shloimy@music-table.com` and complete verification
+   - Check your email and click the verification link
+
+4. **Add to `.env.local`**:
 ```
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-SMTP_FROM=your-email@gmail.com
-CONTACT_EMAIL=contact@yourdomain.com
+SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxx
+SENDGRID_FROM_EMAIL=shloimy@music-table.com
+CONTACT_EMAIL=shloimy@music-table.com
 ```
 
-**For Gmail users:**
-1. Go to your Google Account settings
-2. Enable 2-Factor Authentication
-3. Generate an App Password: https://myaccount.google.com/apppasswords
-4. Use the generated app password as `SMTP_PASS`
-
-**For other email providers:**
-- Check your provider's SMTP settings documentation
-- Update `SMTP_HOST`, `SMTP_PORT`, and `SMTP_SECURE` accordingly
+That's it! Contact form emails will now be reliably delivered to your inbox.
 
 ### 4. Supabase Auth Configuration
 
