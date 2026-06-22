@@ -13,8 +13,11 @@ const PACKS = {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[Checkout] Starting checkout request')
+    
     const authHeader = request.headers.get('Authorization')
     if (!authHeader) {
+      console.error('[Checkout] No auth header')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -23,23 +26,33 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
 
     if (authError || !user) {
+      console.error('[Checkout] Auth failed:', authError)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    console.log('[Checkout] User authenticated:', user.id)
 
     const body = await request.json()
     const { pack } = body
 
+    console.log('[Checkout] Pack requested:', pack)
+
     if (!pack || !(pack in PACKS)) {
+      console.error('[Checkout] Invalid pack:', pack)
       return NextResponse.json({ error: 'Invalid pack' }, { status: 400 })
     }
 
     const selectedPack = PACKS[pack as keyof typeof PACKS]
+    console.log('[Checkout] Selected pack:', selectedPack)
+
     const { error: profileError } = await getOrCreateProfile(createAdminClient(), user.id)
 
     if (profileError) {
-      console.error('Profile lookup/create error:', profileError)
+      console.error('[Checkout] Profile lookup/create error:', profileError)
       return NextResponse.json({ error: 'Profile unavailable' }, { status: 500 })
     }
+
+    console.log('[Checkout] Creating Stripe session...')
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -47,7 +60,7 @@ export async function POST(request: NextRequest) {
       line_items: [
         {
           price_data: {
-            currency: pack === 'producer' ? 'gbp' : 'usd',
+            currency: 'usd',
             product_data: {
               name: `${pack.charAt(0).toUpperCase() + pack.slice(1)} Pack`,
               description: `${selectedPack.credits} credits for Havdolo`,
@@ -66,9 +79,11 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    console.log('[Checkout] Stripe session created:', session.id)
+
     return NextResponse.json({ url: session.url })
-  } catch (error) {
-    console.error('Stripe checkout error:', error)
-    return NextResponse.json({ error: 'Checkout failed' }, { status: 500 })
+  } catch (error: any) {
+    console.error('[Checkout] Stripe checkout error:', error.message, error)
+    return NextResponse.json({ error: error.message || 'Checkout failed' }, { status: 500 })
   }
 }

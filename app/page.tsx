@@ -482,6 +482,7 @@ export default function HomePage() {
               <>
                 <Link
                   href="/profile"
+                  prefetch={true}
                   className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 h-[42px] rounded-lg hover:bg-white/5 transition-all"
                 >
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#4d7cff] to-[#6b93ff] flex items-center justify-center text-sm font-bold shadow-lg">
@@ -494,6 +495,7 @@ export default function HomePage() {
                 </Link>
                 <Link
                   href="/credits"
+                  prefetch={true}
                   className="px-5 sm:px-6 h-[42px] flex items-center rounded-lg bg-[#4d7cff] text-white text-sm font-semibold hover:bg-[#3f6cf5] transition-all hover:scale-[1.02] whitespace-nowrap"
                 >
                   <span className="hidden sm:inline">Get credits</span>
@@ -504,12 +506,14 @@ export default function HomePage() {
               <>
                 <Link
                   href="/auth"
+                  prefetch={true}
                   className="text-sm text-white/60 hover:text-white transition-colors"
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/credits"
+                  prefetch={true}
                   className="px-5 sm:px-6 h-[42px] flex items-center rounded-lg bg-[#4d7cff] text-white text-sm font-semibold hover:bg-[#3f6cf5] transition-all hover:scale-[1.02] whitespace-nowrap"
                 >
                   <span className="hidden sm:inline">Get credits</span>

@@ -20,30 +20,35 @@ function CreditsContent() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loadingPack, setLoadingPack] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [pageLoading, setPageLoading] = useState(true)
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
 
   useEffect(() => {
     async function loadProfile() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
 
-      if (!user) {
-        router.push('/')
-        return
+        if (!user) {
+          router.push('/')
+          return
+        }
+
+        setUser(user)
+
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+
+        setProfile(profileData)
+      } finally {
+        setPageLoading(false)
       }
-
-      setUser(user)
-
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      setProfile(profileData)
     }
 
     loadProfile()
@@ -58,24 +63,34 @@ function CreditsContent() {
     setError(null)
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+      if (sessionError || !session?.access_token) {
+        console.error('Session error:', sessionError)
+        throw new Error('Please sign in again')
+      }
+
+      console.log('Starting checkout for pack:', packId)
 
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ pack: packId }),
       })
 
+      const data = await response.json()
+      
       if (!response.ok) {
-        throw new Error('Checkout failed')
+        console.error('Checkout failed:', data)
+        throw new Error(data.error || 'Checkout failed')
       }
 
-      const data = await response.json()
+      console.log('Redirecting to Stripe:', data.url)
       window.location.href = data.url
-    } catch (err) {
+    } catch (err: any) {
       console.error('Checkout error:', err)
       setError(packId)
       setLoadingPack(null)
@@ -100,7 +115,7 @@ function CreditsContent() {
             <img src="/logo-gradient.svg" alt="Havdolo" className="h-8 sm:h-9 w-auto" />
           </Link>
 
-          {user && (
+          {user && !pageLoading && (
             <Link
               href="/profile"
               className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 h-[42px] rounded-lg hover:bg-white/5 transition-all"
@@ -117,6 +132,15 @@ function CreditsContent() {
         </div>
       </nav>
 
+      {pageLoading ? (
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-20 text-center">
+          <div className="animate-pulse">
+            <div className="h-8 w-32 bg-white/10 rounded mx-auto mb-6"></div>
+            <div className="h-16 w-64 bg-white/10 rounded mx-auto mb-4"></div>
+            <div className="h-4 w-96 bg-white/10 rounded mx-auto"></div>
+          </div>
+        </div>
+      ) : (
       <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 pb-20">
         {/* Hero Section */}
         <div className="text-center mb-12 sm:mb-16">
@@ -179,11 +203,9 @@ function CreditsContent() {
                   <div className="text-xs text-white/40 mb-5">
                     {pack.credits === 1 ? 'up to 6 min of audio' : `up to ${pack.credits * 6} min of audio`}
                   </div>
-                  <div className="text-3xl sm:text-4xl font-bold mb-1.5 text-[#6b93ff]">
-                    {pack.id === 'producer' ? `£${pack.price.toFixed(2)}` : `$${pack.price.toFixed(2)}`}
-                  </div>
+                  <div className="text-3xl sm:text-4xl font-bold mb-1.5 text-[#6b93ff]">${pack.price.toFixed(2)}</div>
                   <div className="text-xs text-white/40">
-                    {pack.id === 'producer' ? `£${(pack.price / pack.credits).toFixed(2)}` : `$${(pack.price / pack.credits).toFixed(2)}`} per credit
+                    ${(pack.price / pack.credits).toFixed(2)} per credit
                   </div>
                 </div>
 
@@ -241,6 +263,7 @@ function CreditsContent() {
           </Link>
         </div>
       </main>
+      )}
     </div>
   )
 }
