@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 const PACKS = {
   starter: { credits: 1, price: 499 },
-  producer: { credits: 3, price: 10 },
+  producer: { credits: 3, price: 50 },
   studio: { credits: 10, price: 2599 },
 }
 

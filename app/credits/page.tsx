@@ -11,7 +11,7 @@ type Profile = Database['public']['Tables']['profiles']['Row']
 
 const PACKS = [
   { id: 'starter', credits: 1, price: 4.99 },
-  { id: 'producer', credits: 3, price: 0.10, highlight: true },
+  { id: 'producer', credits: 3, price: 0.50, highlight: true },
   { id: 'studio', credits: 10, price: 25.99 },
 ]
 
