@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 const PACKS = {
   starter: { credits: 1, price: 499 },
-  producer: { credits: 3, price: 1099 },
+  producer: { credits: 3, price: 10 },
   studio: { credits: 10, price: 2599 },
 }
 
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: pack === 'producer' ? 'gbp' : 'usd',
             product_data: {
               name: `${pack.charAt(0).toUpperCase() + pack.slice(1)} Pack`,
               description: `${selectedPack.credits} credits for Havdolo`,

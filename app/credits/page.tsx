@@ -11,7 +11,7 @@ type Profile = Database['public']['Tables']['profiles']['Row']
 
 const PACKS = [
   { id: 'starter', credits: 1, price: 4.99 },
-  { id: 'producer', credits: 3, price: 10.99, highlight: true },
+  { id: 'producer', credits: 3, price: 0.10, highlight: true },
   { id: 'studio', credits: 10, price: 25.99 },
 ]
 
@@ -179,9 +179,11 @@ function CreditsContent() {
                   <div className="text-xs text-white/40 mb-5">
                     {pack.credits === 1 ? 'up to 6 min of audio' : `up to ${pack.credits * 6} min of audio`}
                   </div>
-                  <div className="text-3xl sm:text-4xl font-bold mb-1.5 text-[#6b93ff]">${pack.price.toFixed(2)}</div>
+                  <div className="text-3xl sm:text-4xl font-bold mb-1.5 text-[#6b93ff]">
+                    {pack.id === 'producer' ? `£${pack.price.toFixed(2)}` : `$${pack.price.toFixed(2)}`}
+                  </div>
                   <div className="text-xs text-white/40">
-                    ${(pack.price / pack.credits).toFixed(2)} per credit
+                    {pack.id === 'producer' ? `£${(pack.price / pack.credits).toFixed(2)}` : `$${(pack.price / pack.credits).toFixed(2)}`} per credit
                   </div>
                 </div>
 
