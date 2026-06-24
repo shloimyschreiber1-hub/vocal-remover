@@ -1,6 +1,7 @@
 import './globals.css'
 import type { Metadata, Viewport } from 'next'
 import { ChunkLoadRecovery } from '@/components/ChunkLoadRecovery'
+import GoogleAnalytics from '@/components/GoogleAnalytics'
 import { Inter, Space_Grotesk } from 'next/font/google'
 
 const inter = Inter({
@@ -40,6 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body className={inter.className}>
+        <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ''} />
         <ChunkLoadRecovery />
         {children}
       </body>

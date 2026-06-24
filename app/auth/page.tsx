@@ -12,6 +12,7 @@ export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState<'error' | 'success'>('error')
   
   const router = useRouter()
   const supabase = createClient()
@@ -33,7 +34,12 @@ export default function AuthPage() {
 
         if (error) throw error
 
-        await new Promise(resolve => setTimeout(resolve, 100))
+        // Show success message
+        setMessageType('success')
+        setMessage('Account created successfully! Redirecting...')
+        
+        // Wait to show the message before redirecting
+        await new Promise(resolve => setTimeout(resolve, 1500))
 
         router.push('/')
         router.refresh()
@@ -47,13 +53,18 @@ export default function AuthPage() {
         
         console.log('Signed in:', data.user?.id)
         
-        // Wait a moment for cookies to be set
-        await new Promise(resolve => setTimeout(resolve, 100))
+        // Show success message
+        setMessageType('success')
+        setMessage('Signed in successfully! Redirecting...')
+        
+        // Wait to show the message before redirecting
+        await new Promise(resolve => setTimeout(resolve, 1500))
         
         router.push('/')
         router.refresh()
       }
     } catch (error: any) {
+      setMessageType('error')
       setMessage(error.message || 'An error occurred')
     } finally {
       setLoading(false)
@@ -105,7 +116,13 @@ export default function AuthPage() {
             </div>
 
             {message && (
-              <div className="p-3 bg-white/5 border border-white/10 rounded-md text-sm">
+              <div className={`
+                p-3 border rounded-md text-sm
+                ${messageType === 'success' 
+                  ? 'bg-green-500/10 border-green-500/30 text-green-400' 
+                  : 'bg-white/5 border-white/10 text-white/90'
+                }
+              `}>
                 {message}
               </div>
             )}
@@ -129,6 +146,7 @@ export default function AuthPage() {
               onClick={() => {
                 setIsSignUp(!isSignUp)
                 setMessage('')
+                setMessageType('error')
               }}
               className="text-sm text-white/60 hover:text-white transition-colors"
             >
