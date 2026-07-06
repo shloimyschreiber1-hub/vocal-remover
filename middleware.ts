@@ -6,12 +6,17 @@ export async function middleware(request: NextRequest) {
   
   // Skip middleware for routes that handle auth client-side
   // This dramatically improves navigation speed by avoiding 2 Supabase API calls
+  
+  // Check homepage exactly (not startsWith to avoid matching all routes)
+  if (pathname === '/') {
+    return NextResponse.next()
+  }
+  
   const skipMiddleware = [
     '/api/',
     '/profile',  // Handles own auth redirect
     '/credits',  // Handles own auth redirect  
     '/auth',
-    '/',
     '/results',
   ]
   
