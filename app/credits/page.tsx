@@ -22,12 +22,8 @@ function CreditsContent() {
   const searchParams = useSearchParams()
   const supabase = createClient()
 
-  useEffect(() => {
-    // Non-blocking redirect check
-    if (!authLoading && !user) {
-      router.push('/')
-    }
-  }, [user, authLoading])
+  // Allow unauthenticated users to view credits page
+  // They'll be prompted to sign in when clicking buy
 
   useEffect(() => {
     // Refresh profile if success param present (non-blocking)
