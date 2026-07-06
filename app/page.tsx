@@ -167,10 +167,10 @@ export default function HomePage() {
         const vocalsAudio = new Audio(track.vocals)
         const instrumentalAudio = new Audio(track.instrumental)
 
-        // Preload all versions
-        originalAudio.preload = 'auto'
-        vocalsAudio.preload = 'auto'
-        instrumentalAudio.preload = 'auto'
+        // Only load metadata, not full files (prevents page hanging)
+        originalAudio.preload = 'metadata'
+        vocalsAudio.preload = 'metadata'
+        instrumentalAudio.preload = 'metadata'
 
         // Set up event listeners for all three
         const handleTimeUpdate = (audio: HTMLAudioElement) => () => {
