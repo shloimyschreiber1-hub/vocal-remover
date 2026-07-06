@@ -214,6 +214,13 @@ export default function HomePage() {
   }, [])
 
 
+  // Eagerly prefetch header link pages on mount
+  useEffect(() => {
+    // Prefetch immediately when homepage loads
+    router.prefetch('/profile')
+    router.prefetch('/credits')
+  }, [router])
+
   useEffect(() => {
     async function loadJobs() {
       if (user) {
