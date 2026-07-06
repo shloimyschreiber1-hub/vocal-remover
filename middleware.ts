@@ -4,8 +4,18 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
-  // Skip middleware for API routes - let them handle auth themselves
-  if (pathname.startsWith('/api/')) {
+  // Skip middleware for routes that handle auth client-side
+  // This dramatically improves navigation speed by avoiding 2 Supabase API calls
+  const skipMiddleware = [
+    '/api/',
+    '/profile',  // Handles own auth redirect
+    '/credits',  // Handles own auth redirect  
+    '/auth',
+    '/',
+    '/results',
+  ]
+  
+  if (skipMiddleware.some(route => pathname.startsWith(route))) {
     return NextResponse.next()
   }
 
@@ -35,8 +45,8 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // `/results` is intentionally public so separation results can be shared.
-  const protectedRoutes = ['/processing', '/credits']
+  // Only /processing needs strict server-side protection
+  const protectedRoutes = ['/processing']
   const isProtected = protectedRoutes.some(r => pathname.startsWith(r))
 
   if (isProtected && !user) {
