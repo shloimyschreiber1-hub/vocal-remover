@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Database } from '@/lib/database.types'
+import { useAuth } from '@/app/contexts/AuthContext'
 import {
   ArrowRightIcon,
   ZapIcon,
@@ -15,7 +16,6 @@ import {
 } from '@/components/icons'
 
 type Job = Database['public']['Tables']['jobs']['Row']
-type Profile = Database['public']['Tables']['profiles']['Row']
 
 type Filter = 'all' | 'ready' | 'processing'
 
@@ -33,49 +33,34 @@ function formatDate(value: string | null) {
 }
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const { user, profile, loading } = useAuth()
   const [jobs, setJobs] = useState<Job[]>([])
-  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<Filter>('all')
 
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
-    async function loadData() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) {
-        router.push('/auth')
-        return
-      }
-
-      setUser(user)
-
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      setProfile(profileData)
-
-      const { data: jobsData } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(50)
-
-      setJobs(jobsData || [])
-      setLoading(false)
+    if (!loading && !user) {
+      router.push('/auth')
+      return
     }
 
-    loadData()
-  }, [])
+    async function loadJobs() {
+      if (user) {
+        const { data: jobsData } = await supabase
+          .from('jobs')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(50)
+
+        setJobs(jobsData || [])
+      }
+    }
+
+    loadJobs()
+  }, [user, loading])
 
   const doneCount = useMemo(() => jobs.filter((j) => j.status === 'done').length, [jobs])
   const processingCount = useMemo(

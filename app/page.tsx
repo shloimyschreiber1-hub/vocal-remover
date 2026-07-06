@@ -8,6 +8,7 @@ import type { Database } from '@/lib/database.types'
 import { UploadIcon, SeparateIcon, CloseIcon, ArrowRightIcon, PlayIcon, PauseIcon } from '@/components/icons'
 import { ContactModal } from '@/components/ContactModal'
 import { creditsForDuration, MINUTES_PER_CREDIT } from '@/lib/credits'
+import { useAuth } from '@/app/contexts/AuthContext'
 import dynamic from 'next/dynamic'
 
 const BackgroundPaperShaders = dynamic(() => import('@/components/ui/background-paper-shaders'), {
@@ -15,7 +16,6 @@ const BackgroundPaperShaders = dynamic(() => import('@/components/ui/background-
 })
 
 type Job = Database['public']['Tables']['jobs']['Row']
-type Profile = Database['public']['Tables']['profiles']['Row']
 
 function formatTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
@@ -25,8 +25,7 @@ function formatTime(seconds: number) {
 }
 
 export default function HomePage() {
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const { user, profile, loading } = useAuth()
   const [jobs, setJobs] = useState<Job[]>([])
   const [file, setFile] = useState<File | null>(null)
   const [fileDuration, setFileDuration] = useState<number | null>(null)
@@ -36,7 +35,6 @@ export default function HomePage() {
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [showContactModal, setShowContactModal] = useState(false)
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false)
-  const [loading, setLoading] = useState(true)
   const [playingTrack, setPlayingTrack] = useState<string | null>(null)
   const [playingVersion, setPlayingVersion] = useState<'original' | 'vocals' | 'instrumental'>('original')
   const [progress, setProgress] = useState<{ time: number; duration: number }>({ time: 0, duration: 0 })
@@ -208,22 +206,8 @@ export default function HomePage() {
 
 
   useEffect(() => {
-    async function loadData() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      setUser(user)
-
+    async function loadJobs() {
       if (user) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
-
-        setProfile(profileData)
-
         const { data: jobsData } = await supabase
           .from('jobs')
           .select('*')
@@ -233,45 +217,12 @@ export default function HomePage() {
 
         setJobs(jobsData || [])
       } else {
-        setProfile(null)
         setJobs([])
       }
-
-      setLoading(false)
     }
 
-    loadData()
-
-    // Listen for auth state changes (sign in, sign out)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(session.user)
-        // Reload profile and jobs when user signs in
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data }) => setProfile(data))
-        
-        supabase
-          .from('jobs')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false })
-          .limit(5)
-          .then(({ data }) => setJobs(data || []))
-      } else {
-        setUser(null)
-        setProfile(null)
-        setJobs([])
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
+    loadJobs()
+  }, [user])
 
   const handleFileSelect = (selectedFile: File) => {
     if (loading) return

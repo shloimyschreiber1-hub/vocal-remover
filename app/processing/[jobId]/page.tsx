@@ -5,10 +5,10 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import type { Database } from '@/lib/database.types'
+import { useAuth } from '@/app/contexts/AuthContext'
 import { AlertTriangleIcon } from '@/components/icons'
 
 type Job = Database['public']['Tables']['jobs']['Row']
-type Profile = Database['public']['Tables']['profiles']['Row']
 
 const STEPS = [
   { key: 'uploaded', label: 'Uploaded', sub: 'Your track is in' },
@@ -18,9 +18,8 @@ const STEPS = [
 ]
 
 export default function ProcessingPage() {
+  const { user, profile, loading: authLoading } = useAuth()
   const [job, setJob] = useState<Job | null>(null)
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
   const [currentStep, setCurrentStep] = useState(1)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState(false)
@@ -30,33 +29,21 @@ export default function ProcessingPage() {
   const supabase = createClient()
 
   useEffect(() => {
+    if (authLoading) return
+
+    if (!user) {
+      router.push('/')
+      return
+    }
+
     async function checkJob() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) {
-        router.push('/')
-        return
-      }
-
-      setUser(user)
-
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      setProfile(profileData)
-
       const { data: jobData } = await supabase
         .from('jobs')
         .select('*')
         .eq('id', jobId)
         .single()
 
-      if (!jobData || jobData.user_id !== user.id) {
+      if (!jobData || jobData.user_id !== user!.id) {
         router.push('/')
         return
       }
@@ -65,7 +52,7 @@ export default function ProcessingPage() {
     }
 
     checkJob()
-  }, [jobId])
+  }, [jobId, user, authLoading])
 
   useEffect(() => {
     if (!job) return

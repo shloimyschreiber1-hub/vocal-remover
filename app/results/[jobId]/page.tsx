@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import WaveSurfer from 'wavesurfer.js'
 import type { Database } from '@/lib/database.types'
+import { useAuth } from '@/app/contexts/AuthContext'
 import {
   PlayIcon,
   PauseIcon,
@@ -21,8 +22,6 @@ import {
   SparklesIcon,
 } from '@/components/icons'
 
-type Profile = Database['public']['Tables']['profiles']['Row']
-
 // Only the public-safe subset of a job is needed to render the shared page.
 type PublicJob = {
   status: string
@@ -32,10 +31,9 @@ type PublicJob = {
 }
 
 export default function ResultsPage() {
+  const { user, profile } = useAuth()
   const [job, setJob] = useState<PublicJob | null>(null)
   const [notFound, setNotFound] = useState(false)
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
   const [vocalsPlaying, setVocalsPlaying] = useState(false)
   const [instrumentalPlaying, setInstrumentalPlaying] = useState(false)
   const [vocalsDownloaded, setVocalsDownloaded] = useState(false)
@@ -54,22 +52,6 @@ export default function ResultsPage() {
 
   useEffect(() => {
     async function loadJob() {
-      // The results page is public so links can be shared, but if the visitor
-      // happens to be signed in we still show their account nav + credits.
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (user) {
-        setUser(user)
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
-        setProfile(profileData)
-      }
-
       try {
         const res = await fetch(`/api/public/job/${jobId}`)
         if (!res.ok) {

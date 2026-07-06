@@ -5,9 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import type { Database } from '@/lib/database.types'
+import { useAuth } from '@/app/contexts/AuthContext'
 import { SparklesIcon, CheckIcon, ZapIcon, PlusIcon } from '@/components/icons'
-
-type Profile = Database['public']['Tables']['profiles']['Row']
 
 const PACKS = [
   { id: 'starter', credits: 1, price: 4.99 },
@@ -16,47 +15,23 @@ const PACKS = [
 ]
 
 function CreditsContent() {
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth()
   const [loadingPack, setLoadingPack] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [pageLoading, setPageLoading] = useState(true)
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
 
   useEffect(() => {
-    async function loadProfile() {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-
-        if (!user) {
-          router.push('/')
-          return
-        }
-
-        setUser(user)
-
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
-
-        setProfile(profileData)
-      } finally {
-        setPageLoading(false)
-      }
+    if (!authLoading && !user) {
+      router.push('/')
+      return
     }
-
-    loadProfile()
 
     if (searchParams.get('success') === 'true') {
-      loadProfile()
+      refreshProfile()
     }
-  }, [searchParams])
+  }, [searchParams, user, authLoading])
 
   const handleBuyPack = async (packId: string) => {
     setLoadingPack(packId)
@@ -115,7 +90,7 @@ function CreditsContent() {
             <img src="/logo-gradient.svg" alt="Havdolo" className="h-8 sm:h-9 w-auto" />
           </Link>
 
-          {user && !pageLoading && (
+          {user && !authLoading && (
             <Link
               href="/profile"
               className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 h-[42px] rounded-lg hover:bg-white/5 transition-all"
@@ -132,7 +107,7 @@ function CreditsContent() {
         </div>
       </nav>
 
-      {pageLoading ? (
+      {authLoading ? (
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-20 text-center">
           <div className="animate-pulse">
             <div className="h-8 w-32 bg-white/10 rounded mx-auto mb-6"></div>
