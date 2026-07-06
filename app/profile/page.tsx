@@ -48,30 +48,35 @@ export default function ProfilePage() {
 
     // Load jobs asynchronously without blocking render
     if (user) {
-      // Load fewer jobs initially for faster first paint, then load more
-      supabase
-        .from('jobs')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10) // Load 10 first for speed
-        .then(({ data }) => {
+      const loadJobs = async () => {
+        try {
+          // Load fewer jobs initially for faster first paint
+          const { data } = await supabase
+            .from('jobs')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(10)
+          
           if (data) setJobs(data)
           
           // Then load the rest in background
           if (data && data.length === 10) {
-            supabase
+            const { data: allJobs } = await supabase
               .from('jobs')
               .select('*')
               .eq('user_id', user.id)
               .order('created_at', { ascending: false })
               .limit(50)
-              .then(({ data: allJobs }) => {
-                if (allJobs) setJobs(allJobs)
-              })
+            
+            if (allJobs) setJobs(allJobs)
           }
-        })
-        .catch(err => console.error('Failed to load jobs:', err))
+        } catch (err) {
+          console.error('Failed to load jobs:', err)
+        }
+      }
+      
+      loadJobs()
     }
   }, [user, loading])
 
