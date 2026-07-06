@@ -13,8 +13,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing url parameter' }, { status: 400 })
     }
 
-    // Validate that the URL is from LALAL.AI to prevent abuse
-    if (!url.startsWith('https://www.lalal.ai/') && !url.includes('lalal.ai')) {
+    // Validate that the URL is genuinely from LALAL.AI to prevent SSRF / open-proxy
+    // abuse. A substring check like `url.includes('lalal.ai')` is bypassable
+    // (e.g. `http://169.254.169.254/#lalal.ai`), so we parse and check the host
+    // explicitly and require HTTPS.
+    let parsed: URL
+    try {
+      parsed = new URL(url)
+    } catch {
+      return NextResponse.json({ error: 'Invalid URL' }, { status: 400 })
+    }
+
+    const ALLOWED_HOSTS = new Set(['www.lalal.ai', 'lalal.ai'])
+    const isAllowedHost =
+      ALLOWED_HOSTS.has(parsed.hostname) || parsed.hostname.endsWith('.lalal.ai')
+
+    if (parsed.protocol !== 'https:' || !isAllowedHost) {
       return NextResponse.json({ error: 'Invalid URL' }, { status: 403 })
     }
 

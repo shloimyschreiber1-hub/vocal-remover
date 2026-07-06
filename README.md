@@ -47,7 +47,7 @@ create table credit_purchases (
   user_id uuid references profiles(id) on delete cascade not null,
   stripe_session_id text not null,
   credits_purchased integer not null,
-  amount_gbp numeric(10,2) not null,
+  amount_usd numeric(10,2) not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

@@ -1,4 +1,5 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { adjustCredits } from '@/lib/credits-server'
 import { NextRequest, NextResponse } from 'next/server'
 
 type Track = {
@@ -111,19 +112,26 @@ export async function GET(
       console.error('LALAL.AI task error:', task?.error || task)
       internalStatus = 'failed'
 
-      // Refund the credits this job consumed (1 per 6-minute block)
-      const refundAmount = job.credits_used || 1
-      const { data: profile } = await admin
-        .from('profiles')
-        .select('credits')
-        .eq('id', user.id)
-        .single()
+      // Atomically claim the failure transition so the refund happens exactly
+      // once, even if several status polls land concurrently. Only the request
+      // that actually flips the job to 'failed' (from a non-failed state) issues
+      // the refund; Postgres re-checks the WHERE against the locked row, so a
+      // racing poll sees status='failed' and is excluded.
+      const { data: claimed } = await admin
+        .from('jobs')
+        .update({ status: 'failed' })
+        .eq('id', jobId)
+        .neq('status', 'failed')
+        .select('id')
+        .maybeSingle()
 
-      if (profile) {
-        await admin
-          .from('profiles')
-          .update({ credits: profile.credits + refundAmount })
-          .eq('id', user.id)
+      if (claimed) {
+        // Refund the credits this job consumed (1 per 6-minute block)
+        const refundAmount = job.credits_used || 1
+        const { error: refundError } = await adjustCredits(admin, user.id, refundAmount)
+        if (refundError) {
+          console.error('Refund error:', refundError)
+        }
       }
     } else if (taskStatus === 'progress') {
       progress = task?.progress || 0

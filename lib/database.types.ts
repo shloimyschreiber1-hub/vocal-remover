@@ -75,7 +75,7 @@ export interface Database {
           user_id: string
           stripe_session_id: string
           credits_purchased: number
-          amount_gbp: number
+          amount_usd: number
           created_at: string
         }
         Insert: {
@@ -83,7 +83,7 @@ export interface Database {
           user_id: string
           stripe_session_id: string
           credits_purchased: number
-          amount_gbp: number
+          amount_usd: number
           created_at?: string
         }
         Update: {
@@ -91,7 +91,7 @@ export interface Database {
           user_id?: string
           stripe_session_id?: string
           credits_purchased?: number
-          amount_gbp?: number
+          amount_usd?: number
           created_at?: string
         }
         Relationships: []

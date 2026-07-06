@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import { getOrCreateProfile } from '@/lib/profiles'
+import { adjustCredits } from '@/lib/credits-server'
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
@@ -55,41 +56,68 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient()
     console.log('[Webhook] Admin client created')
 
-    const { data: profile, error: profileError } = await getOrCreateProfile(supabase, userId)
+    // Idempotency: Stripe delivers webhooks *at least once* and retries on any
+    // non-2xx / timeout. Without this guard a duplicate delivery would credit
+    // the user again. We key off the (already-recorded) purchase row for the
+    // session. NOTE: a UNIQUE constraint on credit_purchases.stripe_session_id
+    // should also be added at the DB level to close the last concurrency gap.
+    const { data: existingPurchase, error: existingError } = await supabase
+      .from('credit_purchases')
+      .select('id')
+      .eq('stripe_session_id', stripeSessionId)
+      .maybeSingle()
 
-    if (profileError || !profile) {
+    if (existingError) {
+      console.error('[Webhook] Error checking existing purchase:', existingError)
+      return NextResponse.json({ error: 'Lookup failed' }, { status: 500 })
+    }
+
+    if (existingPurchase) {
+      console.log('[Webhook] Duplicate delivery, already processed:', stripeSessionId)
+      return NextResponse.json({ received: true, duplicate: true })
+    }
+
+    const { error: profileError } = await getOrCreateProfile(supabase, userId)
+
+    if (profileError) {
       console.error('[Webhook] Profile lookup/create error:', profileError, 'userId:', userId)
       return NextResponse.json({ error: 'Profile unavailable' }, { status: 500 })
     }
 
-    console.log('[Webhook] Current credits:', profile.credits, 'Adding:', creditsToAdd)
-
-    const newCredits = profile.credits + creditsToAdd
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ credits: newCredits })
-      .eq('id', userId)
-
-    if (updateError) {
-      console.error('[Webhook] Error updating credits:', updateError)
-      return NextResponse.json({ error: 'Update failed' }, { status: 500 })
-    }
-
-    console.log('[Webhook] Credits updated to:', newCredits)
-
+    // Record the purchase FIRST so it acts as the idempotency marker. If two
+    // deliveries race, the second will find the row on its next attempt.
     const { error: purchaseError } = await supabase.from('credit_purchases').insert({
       user_id: userId,
       stripe_session_id: stripeSessionId,
       credits_purchased: creditsToAdd,
-      amount_gbp: amountUsd,
+      amount_usd: amountUsd,
     })
 
     if (purchaseError) {
       console.error('[Webhook] Error recording purchase:', purchaseError)
-      // Don't fail the webhook if purchase recording fails, credits were still added
-    } else {
-      console.log('[Webhook] Purchase recorded successfully')
+      return NextResponse.json({ error: 'Purchase recording failed' }, { status: 500 })
     }
+
+    console.log('[Webhook] Purchase recorded, adding credits:', creditsToAdd)
+
+    const { credits: newCredits, error: creditError } = await adjustCredits(
+      supabase,
+      userId,
+      creditsToAdd
+    )
+
+    if (creditError) {
+      console.error('[Webhook] Error updating credits:', creditError)
+      // Roll back the idempotency marker so Stripe's retry re-processes this
+      // session instead of short-circuiting as a "duplicate" with no credits.
+      await supabase
+        .from('credit_purchases')
+        .delete()
+        .eq('stripe_session_id', stripeSessionId)
+      return NextResponse.json({ error: 'Update failed' }, { status: 500 })
+    }
+
+    console.log('[Webhook] Credits updated to:', newCredits)
   } else {
     console.log('[Webhook] Ignoring event type:', event.type)
   }

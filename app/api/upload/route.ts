@@ -1,6 +1,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { creditsForDuration } from '@/lib/credits'
+import { adjustCredits } from '@/lib/credits-server'
 import { getOrCreateProfile } from '@/lib/profiles'
 
 // Allow up to a minute: this route pulls the original out of Supabase Storage
@@ -219,11 +220,14 @@ export async function POST(request: NextRequest) {
       console.error('Job update error:', updateError)
     }
 
-    // Deduct credits (1 per started 6-minute block)
-    const { error: creditError } = await admin
-      .from('profiles')
-      .update({ credits: profile.credits - creditsNeeded })
-      .eq('id', user.id)
+    // Deduct credits (1 per started 6-minute block). Uses an atomic
+    // compare-and-swap so concurrent uploads can't double-spend the balance.
+    const { error: creditError } = await adjustCredits(
+      admin,
+      user.id,
+      -creditsNeeded,
+      { requireNonNegative: true }
+    )
 
     if (creditError) {
       console.error('Credit deduction error:', creditError)
