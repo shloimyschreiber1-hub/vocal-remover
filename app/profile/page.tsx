@@ -93,16 +93,7 @@ export default function ProfilePage() {
     return jobs
   }, [jobs, filter])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#080808] text-white flex items-center justify-center">
-        <div className="flex items-center gap-3 text-white/40 animate-fade-in">
-          <span className="w-2 h-2 rounded-full bg-[#4d7cff] animate-pulse-soft" />
-          Loading your studio…
-        </div>
-      </div>
-    )
-  }
+  // Render page immediately - no blocking loading screen
 
   const filters: { key: Filter; label: string; count: number }[] = [
     { key: 'all', label: 'All', count: jobs.length },

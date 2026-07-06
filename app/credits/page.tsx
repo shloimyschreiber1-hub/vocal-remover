@@ -93,7 +93,7 @@ function CreditsContent() {
             <img src="/logo-gradient.svg" alt="Havdolo" className="h-8 sm:h-9 w-auto" />
           </Link>
 
-          {user && !authLoading && (
+          {user && (
             <Link
               href="/profile"
               className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 h-[42px] rounded-lg hover:bg-white/5 transition-all"
@@ -110,15 +110,8 @@ function CreditsContent() {
         </div>
       </nav>
 
-      {authLoading ? (
-        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-20 text-center">
-          <div className="animate-pulse">
-            <div className="h-8 w-32 bg-white/10 rounded mx-auto mb-6"></div>
-            <div className="h-16 w-64 bg-white/10 rounded mx-auto mb-4"></div>
-            <div className="h-4 w-96 bg-white/10 rounded mx-auto"></div>
-          </div>
-        </div>
-      ) : (
+      {/* Render immediately - no blocking loading screen */}
+      {(
       <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 pb-20">
         {/* Hero Section */}
         <div className="text-center mb-12 sm:mb-16">
