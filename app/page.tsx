@@ -39,10 +39,19 @@ export default function HomePage() {
   const [playingVersion, setPlayingVersion] = useState<'original' | 'vocals' | 'instrumental'>('original')
   const [progress, setProgress] = useState<{ time: number; duration: number }>({ time: 0, duration: 0 })
   const audioRefs = useRef<{ [key: string]: { original: HTMLAudioElement | null; vocals: HTMLAudioElement | null; instrumental: HTMLAudioElement | null } }>({})
+  const prefetchedRef = useRef<{ profile: boolean; credits: boolean }>({ profile: false, credits: false })
 
   const router = useRouter()
   const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Aggressive prefetching on hover
+  const handleLinkHover = (path: '/profile' | '/credits') => {
+    if (!prefetchedRef.current[path === '/profile' ? 'profile' : 'credits']) {
+      router.prefetch(path)
+      prefetchedRef.current[path === '/profile' ? 'profile' : 'credits'] = true
+    }
+  }
 
   // Sample tracks for before/after demo
   const sampleTracks = [
@@ -434,6 +443,7 @@ export default function HomePage() {
                 <Link
                   href="/profile"
                   prefetch={true}
+                  onMouseEnter={() => handleLinkHover('/profile')}
                   className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 h-[42px] rounded-lg hover:bg-white/5 transition-all"
                 >
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#4d7cff] to-[#6b93ff] flex items-center justify-center text-sm font-bold shadow-lg">
@@ -447,6 +457,7 @@ export default function HomePage() {
                 <Link
                   href="/credits"
                   prefetch={true}
+                  onMouseEnter={() => handleLinkHover('/credits')}
                   className="px-5 sm:px-6 h-[42px] flex items-center rounded-lg bg-[#4d7cff] text-white text-sm font-semibold hover:bg-[#3f6cf5] transition-all hover:scale-[1.02] whitespace-nowrap"
                 >
                   <span className="hidden sm:inline">Get credits</span>
@@ -465,6 +476,7 @@ export default function HomePage() {
                 <Link
                   href="/credits"
                   prefetch={true}
+                  onMouseEnter={() => handleLinkHover('/credits')}
                   className="px-5 sm:px-6 h-[42px] flex items-center rounded-lg bg-[#4d7cff] text-white text-sm font-semibold hover:bg-[#3f6cf5] transition-all hover:scale-[1.02] whitespace-nowrap"
                 >
                   <span className="hidden sm:inline">Get credits</span>

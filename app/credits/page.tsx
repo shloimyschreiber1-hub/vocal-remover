@@ -23,15 +23,18 @@ function CreditsContent() {
   const supabase = createClient()
 
   useEffect(() => {
+    // Non-blocking redirect check
     if (!authLoading && !user) {
       router.push('/')
-      return
     }
+  }, [user, authLoading])
 
+  useEffect(() => {
+    // Refresh profile if success param present (non-blocking)
     if (searchParams.get('success') === 'true') {
       refreshProfile()
     }
-  }, [searchParams, user, authLoading])
+  }, [searchParams])
 
   const handleBuyPack = async (packId: string) => {
     setLoadingPack(packId)
