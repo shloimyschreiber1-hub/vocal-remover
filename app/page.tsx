@@ -445,7 +445,7 @@ export default function HomePage() {
           </Link>
 
           <div className="flex items-center gap-4 sm:gap-5">
-            {loading ? null : user ? (
+            {!loading && user ? (
               <>
                 <Link
                   href="/profile"
@@ -472,24 +472,26 @@ export default function HomePage() {
                 </Link>
               </>
             ) : (
-              <>
-                <Link
-                  href="/auth"
-                  prefetch={true}
-                  className="text-sm text-white/60 hover:text-white transition-colors"
-                >
-                  Sign in
-                </Link>
-                <Link
-                  href="/credits"
-                  prefetch={true}
-                  onMouseEnter={() => handleLinkHover('/credits')}
-                  className="px-5 sm:px-6 h-[42px] flex items-center rounded-lg bg-[#4d7cff] text-white text-sm font-semibold hover:bg-[#3f6cf5] transition-all hover:scale-[1.02] whitespace-nowrap"
-                >
-                  <span className="hidden sm:inline">Get credits</span>
-                  <span className="sm:hidden">Credits</span>
-                </Link>
-              </>
+              <div className={loading ? 'opacity-0 pointer-events-none' : undefined}>
+                <div className="flex items-center gap-4 sm:gap-5">
+                  <Link
+                    href="/auth"
+                    prefetch={true}
+                    className="text-sm text-white/60 hover:text-white transition-colors"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    href="/credits"
+                    prefetch={true}
+                    onMouseEnter={() => handleLinkHover('/credits')}
+                    className="px-5 sm:px-6 h-[42px] flex items-center rounded-lg bg-[#4d7cff] text-white text-sm font-semibold hover:bg-[#3f6cf5] transition-all hover:scale-[1.02] whitespace-nowrap"
+                  >
+                    <span className="hidden sm:inline">Get credits</span>
+                    <span className="sm:hidden">Credits</span>
+                  </Link>
+                </div>
+              </div>
             )}
           </div>
         </div>
