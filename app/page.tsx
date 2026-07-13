@@ -445,7 +445,7 @@ export default function HomePage() {
           </Link>
 
           <div className="flex items-center gap-4 sm:gap-5">
-            {!loading && user ? (
+            {user ? (
               <>
                 <Link
                   href="/profile"
@@ -471,27 +471,34 @@ export default function HomePage() {
                   <span className="sm:hidden">Credits</span>
                 </Link>
               </>
-            ) : (
-              <div className={loading ? 'opacity-0 pointer-events-none' : undefined}>
-                <div className="flex items-center gap-4 sm:gap-5">
-                  <Link
-                    href="/auth"
-                    prefetch={true}
-                    className="text-sm text-white/60 hover:text-white transition-colors"
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    href="/credits"
-                    prefetch={true}
-                    onMouseEnter={() => handleLinkHover('/credits')}
-                    className="px-5 sm:px-6 h-[42px] flex items-center rounded-lg bg-[#4d7cff] text-white text-sm font-semibold hover:bg-[#3f6cf5] transition-all hover:scale-[1.02] whitespace-nowrap"
-                  >
-                    <span className="hidden sm:inline">Get credits</span>
-                    <span className="sm:hidden">Credits</span>
-                  </Link>
+            ) : loading ? (
+              // Reserve logged-in nav width so it doesn't pop in late
+              <div className="flex items-center gap-4 sm:gap-5" aria-hidden>
+                <div className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 h-[42px]">
+                  <div className="w-7 h-7 rounded-full bg-white/10 animate-pulse" />
+                  <div className="h-4 w-16 rounded bg-white/10 animate-pulse" />
                 </div>
+                <div className="h-[42px] w-[88px] sm:w-[118px] rounded-lg bg-white/10 animate-pulse" />
               </div>
+            ) : (
+              <>
+                <Link
+                  href="/auth"
+                  prefetch={true}
+                  className="text-sm text-white/60 hover:text-white transition-colors"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/credits"
+                  prefetch={true}
+                  onMouseEnter={() => handleLinkHover('/credits')}
+                  className="px-5 sm:px-6 h-[42px] flex items-center rounded-lg bg-[#4d7cff] text-white text-sm font-semibold hover:bg-[#3f6cf5] transition-all hover:scale-[1.02] whitespace-nowrap"
+                >
+                  <span className="hidden sm:inline">Get credits</span>
+                  <span className="sm:hidden">Credits</span>
+                </Link>
+              </>
             )}
           </div>
         </div>

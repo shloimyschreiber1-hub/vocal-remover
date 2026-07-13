@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .select('*')
       .eq('id', userId)
       .single()
-    
+
     setProfile(profileData)
     return profileData
   }
@@ -45,32 +45,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    let cancelled = false
+
     const initAuth = async () => {
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      
-      setUser(currentUser)
-      
-      if (currentUser) {
-        await loadProfile(currentUser.id)
+      // Local session read — no network round-trip. Unblocks the header
+      // immediately for logged-in users instead of waiting on getUser() + profile.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (cancelled) return
+
+      if (session?.user) {
+        setUser(session.user)
+        setLoading(false)
+        // Profile credits can fill in after the nav is already visible
+        void loadProfile(session.user.id)
+      } else {
+        setUser(null)
+        setLoading(false)
       }
-      
-      setLoading(false)
     }
 
     initAuth()
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser(session.user)
-        await loadProfile(session.user.id)
+        void loadProfile(session.user.id)
       } else {
         setUser(null)
         setProfile(null)
       }
+      setLoading(false)
     })
 
     return () => {
+      cancelled = true
       subscription.unsubscribe()
     }
   }, [])
