@@ -840,6 +840,15 @@ export default function HomePage() {
         >
           Contact us
         </button>
+        <p className="mt-3 text-white/40 text-sm">
+          Need help? Email me at{' '}
+          <a
+            href="mailto:shloimy@music-table.com"
+            className="text-white/60 hover:text-[#4d7cff] transition-colors font-medium"
+          >
+            shloimy@music-table.com
+          </a>
+        </p>
       </footer>
 
       {/* Auth Prompt Modal */}
