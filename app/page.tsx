@@ -834,13 +834,7 @@ export default function HomePage() {
       </section>
 
       <footer className="relative z-10 pb-16 safe-pb text-center">
-        <button
-          onClick={() => setShowContactModal(true)}
-          className="text-white/60 hover:text-[#4d7cff] transition-colors text-sm font-medium"
-        >
-          Contact us
-        </button>
-        <p className="mt-3 text-white/40 text-sm">
+        <p className="text-white/40 text-sm">
           Need help? Email me at{' '}
           <a
             href="mailto:shloimy@music-table.com"
