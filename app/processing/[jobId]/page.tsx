@@ -7,6 +7,7 @@ import Link from 'next/link'
 import type { Database } from '@/lib/database.types'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { AlertTriangleIcon } from '@/components/icons'
+import { SiteFooter } from '@/components/SiteFooter'
 
 type Job = Database['public']['Tables']['jobs']['Row']
 
@@ -139,6 +140,8 @@ export default function ProcessingPage() {
             </Link>
           </div>
         </main>
+
+        <SiteFooter />
       </div>
     )
   }
@@ -268,6 +271,8 @@ export default function ProcessingPage() {
           })}
         </div>
       </main>
+
+      <SiteFooter />
     </div>
   )
 }

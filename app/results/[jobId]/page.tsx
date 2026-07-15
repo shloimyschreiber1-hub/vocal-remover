@@ -21,6 +21,7 @@ import {
   LinkIcon,
   SparklesIcon,
 } from '@/components/icons'
+import { SiteFooter } from '@/components/SiteFooter'
 
 // Only the public-safe subset of a job is needed to render the shared page.
 type PublicJob = {
@@ -194,19 +195,22 @@ export default function ResultsPage() {
 
   if (notFound) {
     return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center px-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-3">Separation not found</h1>
-          <p className="text-white/60 mb-6">
-            This link may be invalid or the separation isn&apos;t ready yet.
-          </p>
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center px-6 py-3 bg-[#4d7cff] text-white rounded-lg font-medium hover:bg-[#3f6cf5] transition-colors"
-          >
-            Separate a track
-          </Link>
+      <div className="min-h-screen bg-[#080808] flex flex-col">
+        <div className="flex-1 flex items-center justify-center px-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-white mb-3">Separation not found</h1>
+            <p className="text-white/60 mb-6">
+              This link may be invalid or the separation isn&apos;t ready yet.
+            </p>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center px-6 py-3 bg-[#4d7cff] text-white rounded-lg font-medium hover:bg-[#3f6cf5] transition-colors"
+            >
+              Separate a track
+            </Link>
+          </div>
         </div>
+        <SiteFooter />
       </div>
     )
   }
@@ -479,6 +483,8 @@ export default function ResultsPage() {
           </div>
         </div>
       </main>
+
+      <SiteFooter />
     </div>
   )
 }

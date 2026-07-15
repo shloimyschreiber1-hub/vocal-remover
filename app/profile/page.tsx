@@ -14,6 +14,7 @@ import {
   UploadIcon,
   FolderIcon,
 } from '@/components/icons'
+import { SiteFooter } from '@/components/SiteFooter'
 
 type Job = Database['public']['Tables']['jobs']['Row']
 
@@ -395,6 +396,8 @@ export default function ProfilePage() {
           )}
         </section>
       </main>
+
+      <SiteFooter />
     </div>
   )
 }

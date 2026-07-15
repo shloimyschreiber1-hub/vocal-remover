@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRightIcon } from '@/components/icons'
+import { SiteFooter } from '@/components/SiteFooter'
 
 export default function AuthPage() {
   const [email, setEmail] = useState('')
@@ -72,98 +73,102 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white flex items-center justify-center px-6">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="hover:opacity-80 transition-opacity inline-block">
-            <img src="/logo-gradient.svg" alt="Havdolo" className="h-9 w-auto" />
-          </Link>
-        </div>
+    <div className="min-h-screen bg-[#080808] text-white flex flex-col">
+      <div className="flex-1 flex items-center justify-center px-6">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <Link href="/" className="hover:opacity-80 transition-opacity inline-block">
+              <img src="/logo-gradient.svg" alt="Havdolo" className="h-9 w-auto" />
+            </Link>
+          </div>
 
-        <div className="border border-white/10 rounded-lg p-8 bg-[#141414]">
-          <h1 className="text-2xl font-bold mb-6 text-center">
-            {isSignUp ? 'Create account' : 'Sign in'}
-          </h1>
+          <div className="border border-white/10 rounded-lg p-8 bg-[#141414]">
+            <h1 className="text-2xl font-bold mb-6 text-center">
+              {isSignUp ? 'Create account' : 'Sign in'}
+            </h1>
 
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm text-white/60 mb-2">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-[#080808] border border-white/20 rounded-md focus:outline-none focus:border-[#4d7cff] transition-colors"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm text-white/60 mb-2">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full px-4 py-3 bg-[#080808] border border-white/20 rounded-md focus:outline-none focus:border-[#4d7cff] transition-colors"
-              />
-            </div>
-
-            {message && (
-              <div className={`
-                p-3 border rounded-md text-sm
-                ${messageType === 'success' 
-                  ? 'bg-green-500/10 border-green-500/30 text-green-400' 
-                  : 'bg-white/5 border-white/10 text-white/90'
-                }
-              `}>
-                {message}
+            <form onSubmit={handleAuth} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm text-white/60 mb-2">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 bg-[#080808] border border-white/20 rounded-md focus:outline-none focus:border-[#4d7cff] transition-colors"
+                />
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className={`
-                flex w-full items-center justify-center gap-2 px-6 py-3.5 sm:py-3 bg-[#4d7cff] text-white rounded-md font-medium
-                transition-colors
-                ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#3f6cf5] active:bg-[#3f6cf5]'}
-              `}
-            >
-              {loading ? 'Loading...' : isSignUp ? 'Sign up' : 'Sign in'}
-              {!loading && <ArrowRightIcon width={17} height={17} />}
-            </button>
-          </form>
+              <div>
+                <label htmlFor="password" className="block text-sm text-white/60 mb-2">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-3 bg-[#080808] border border-white/20 rounded-md focus:outline-none focus:border-[#4d7cff] transition-colors"
+                />
+              </div>
+
+              {message && (
+                <div className={`
+                  p-3 border rounded-md text-sm
+                  ${messageType === 'success' 
+                    ? 'bg-green-500/10 border-green-500/30 text-green-400' 
+                    : 'bg-white/5 border-white/10 text-white/90'
+                  }
+                `}>
+                  {message}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className={`
+                  flex w-full items-center justify-center gap-2 px-6 py-3.5 sm:py-3 bg-[#4d7cff] text-white rounded-md font-medium
+                  transition-colors
+                  ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#3f6cf5] active:bg-[#3f6cf5]'}
+                `}
+              >
+                {loading ? 'Loading...' : isSignUp ? 'Sign up' : 'Sign in'}
+                {!loading && <ArrowRightIcon width={17} height={17} />}
+              </button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => {
+                  setIsSignUp(!isSignUp)
+                  setMessage('')
+                  setMessageType('error')
+                }}
+                className="text-sm text-white/60 hover:text-white transition-colors"
+              >
+                {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+              </button>
+            </div>
+          </div>
 
           <div className="mt-6 text-center">
-            <button
-              onClick={() => {
-                setIsSignUp(!isSignUp)
-                setMessage('')
-                setMessageType('error')
-              }}
-              className="text-sm text-white/60 hover:text-white transition-colors"
+            <Link
+              href="/"
+              className="text-sm text-white/40 hover:text-white/60 transition-colors"
             >
-              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-            </button>
+              Back to home
+            </Link>
           </div>
         </div>
-
-        <div className="mt-6 text-center">
-          <Link
-            href="/"
-            className="text-sm text-white/40 hover:text-white/60 transition-colors"
-          >
-            Back to home
-          </Link>
-        </div>
       </div>
+
+      <SiteFooter />
     </div>
   )
 }

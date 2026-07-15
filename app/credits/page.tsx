@@ -7,6 +7,7 @@ import Link from 'next/link'
 import type { Database } from '@/lib/database.types'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { SparklesIcon, CheckIcon, ZapIcon, PlusIcon } from '@/components/icons'
+import { SiteFooter } from '@/components/SiteFooter'
 
 const PACKS = [
   { id: 'starter', credits: 1, price: 4.99 },
@@ -231,6 +232,8 @@ function CreditsContent() {
         </div>
       </main>
       )}
+
+      <SiteFooter />
     </div>
   )
 }
