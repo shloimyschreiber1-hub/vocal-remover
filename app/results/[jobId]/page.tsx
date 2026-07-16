@@ -238,8 +238,8 @@ export default function ResultsPage() {
     )
   }
 
-  const vocalsFilename = job.original_filename.replace(/\.[^/.]+$/, '_vocals.mp3')
-  const instrumentalFilename = job.original_filename.replace(/\.[^/.]+$/, '_music.mp3')
+  const vocalsFilename = job.original_filename.replace(/\.[^/.]+$/, '_vocals_split_by_havdolo.mp3')
+  const instrumentalFilename = job.original_filename.replace(/\.[^/.]+$/, '_music_split_by_havdolo.mp3')
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#080808] text-white">

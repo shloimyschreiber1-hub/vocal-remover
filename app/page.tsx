@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Database } from '@/lib/database.types'
-import { UploadIcon, SeparateIcon, CloseIcon, ArrowRightIcon, PlayIcon, PauseIcon } from '@/components/icons'
+import { UploadIcon, SeparateIcon, CloseIcon, ArrowRightIcon, PlayIcon, PauseIcon, GoogleIcon } from '@/components/icons'
 import { ContactModal } from '@/components/ContactModal'
 import { SiteFooter } from '@/components/SiteFooter'
 import { creditsForDuration, MINUTES_PER_CREDIT } from '@/lib/credits'
@@ -845,6 +845,25 @@ export default function HomePage() {
               Your file is ready and waiting — sign up or sign in and we&apos;ll pick up right
               where you left off.
             </p>
+
+            <button
+              type="button"
+              onClick={async () => {
+                const { error } = await supabase.auth.signInWithOAuth({
+                  provider: 'google',
+                  options: {
+                    redirectTo: `${window.location.origin}/auth/callback`,
+                  },
+                })
+                if (error) {
+                  console.error('Google sign-in failed:', error.message)
+                }
+              }}
+              className="flex w-full items-center justify-center gap-3 px-6 py-3 bg-white text-[#1f1f1f] rounded-lg font-medium hover:bg-white/90 transition-colors mb-3"
+            >
+              <GoogleIcon width={18} height={18} />
+              Continue with Google
+            </button>
 
             <div className="flex gap-3">
               <Link
